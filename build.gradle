@@ -1,0 +1,28 @@
+plugins {
+    id 'application'
+}
+
+group 'me.swiftsatchel'
+version '1.0-DEV'
+
+sourceCompatibility = JavaVersion.VERSION_16
+targetCompatibility = JavaVersion.VERSION_16
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    // For reading JSON files returned by dictionary api, from (https://mvnrepository.com/artifact/com.googlecode.json-simple/json-simple)
+    implementation 'com.googlecode.json-simple:json-simple:1.1.1'
+}
+
+application {
+    mainClass = 'me.swiftsatchel.define4me.Main'
+}
+
+jar {
+    manifest {
+        attributes "Main-Class": 'me.swiftsatchel.define4me.Main'
+    }
+}
