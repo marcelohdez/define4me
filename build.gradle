@@ -12,9 +12,15 @@ repositories {
     mavenCentral()
 }
 
+configurations {
+    // Used to get dependencies included in jar. Gotten from Nikecrow: https://discuss.gradle.org/t/how-to-include-dependencies-in-jar/19571
+    extraLibs
+}
+
 dependencies {
     // For reading JSON files returned by dictionary api, from (https://mvnrepository.com/artifact/com.googlecode.json-simple/json-simple)
     implementation 'com.googlecode.json-simple:json-simple:1.1.1'
+    extraLibs group: 'com.googlecode.json-simple', name: 'json-simple', version: '1.1.1'
 }
 
 application {
@@ -22,6 +28,10 @@ application {
 }
 
 jar {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    from {
+        configurations.extraLibs.collect { it.isDirectory() ? it : zipTree(it) }
+    }
     manifest {
         attributes "Main-Class": 'me.swiftsatchel.define4me.Main'
     }
