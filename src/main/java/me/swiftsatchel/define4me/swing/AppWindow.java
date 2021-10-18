@@ -35,6 +35,11 @@ public class AppWindow extends JFrame implements ActionListener {
     private final JMenuItem openAbout = new JMenuItem("About");
     private final JMenuItem openPrefs = new JMenuItem("Preferences");
 
+    // Right click text area menu components:
+    private final JPopupMenu rightClickMenu = new JPopupMenu();
+    private final JMenuItem copyAllText = new JMenuItem("Copy All");
+    private final JMenuItem copySelectedText = new JMenuItem("Copy Selected");
+
     private final ArrayList<String> words = new ArrayList<>(); // Selected file's words
     ConcurrentHashMap<String, String> definitions = new ConcurrentHashMap<>(); // The word's definitions
 
@@ -70,40 +75,61 @@ public class AppWindow extends JFrame implements ActionListener {
         defineButton.setEnabled(false); // Disable define button until we have selected a file
         openPrefs.addActionListener(this);
         openAbout.addActionListener(this);
+        copyAllText.addActionListener(this);
+        copySelectedText.addActionListener(this);
 
         statusText.setEditable(false);
         statusText.setLineWrap(true);
         statusText.setWrapStyleWord(true);
+        statusText.setComponentPopupMenu(rightClickMenu);
+
+        rightClickMenu.add(copyAllText);
+        rightClickMenu.add(copySelectedText);
 
     }
 
     @Override
     public void actionPerformed(ActionEvent e) {
 
-        if (e.getSource() == chooseButton) {
+        if (e.getSource().equals(chooseButton)) {
 
-            JFileChooser jfc = new JFileChooser(); // Create a new JFileChooser instance
-            jfc.setFileFilter(new FileNameExtensionFilter("Text Files", "txt")); // Set file filter
-            int returnVal = jfc.showDialog(this, "Define"); // Get return value of it
+            chooseFile();
 
-            if (returnVal == JFileChooser.APPROVE_OPTION) { // If file was approved
-                try {
-                    readFile(jfc.getSelectedFile());    // Try to read it
-                } catch (Exception x) {
-                    System.out.println("Failed to read file! Stack trace:");
-                    x.printStackTrace();
-                }
-            }
-
-        } else if (e.getSource() == defineButton) {
+        } else if (e.getSource().equals(defineButton)) {
 
             statusText.setText(defineWords());
             defineButton.setText("Write to file");
 
-        } else if (e.getSource() == openAbout) {
+        } else if (e.getSource().equals(copyAllText)) {
+
+            StringSelection text = new StringSelection(statusText.getText());
+            Toolkit.getDefaultToolkit().getSystemClipboard().setContents(text, text);
+
+        } else if (e.getSource().equals(copySelectedText)) {
+
+            StringSelection text = new StringSelection(statusText.getSelectedText());
+            Toolkit.getDefaultToolkit().getSystemClipboard().setContents(text, text);
+
+        } else if (e.getSource().equals(openAbout)) {
             new AboutDialog();
-        } else if (e.getSource() == openPrefs) {
+        } else if (e.getSource().equals(openPrefs)) {
             new PrefsDialog();
+        }
+
+    }
+
+    private void chooseFile() {
+
+        jfc.setFileFilter(new FileNameExtensionFilter("Text Files", "txt")); // Set file filter
+        int returnVal = jfc.showDialog(this, "Define"); // Get return value of it
+
+        if (returnVal == JFileChooser.APPROVE_OPTION) { // If file was approved
+            try {
+                readFile(jfc.getSelectedFile());    // Try to read it
+            } catch (Exception x) {
+                System.out.println("Failed to read file! Stack trace:");
+                x.printStackTrace();
+            }
         }
 
     }
