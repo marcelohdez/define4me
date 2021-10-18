@@ -9,6 +9,7 @@ import org.json.simple.parser.ParseException;
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
+import java.awt.datatransfer.StringSelection;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.*;
@@ -19,6 +20,8 @@ import java.util.Scanner;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class AppWindow extends JFrame implements ActionListener {
+
+    JFileChooser jfc = new JFileChooser(); // Our file chooser instance
 
     // Main components
     private final JButton chooseButton = new JButton("Choose file");
