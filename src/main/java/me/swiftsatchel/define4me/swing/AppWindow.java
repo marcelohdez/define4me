@@ -1,17 +1,22 @@
 package me.swiftsatchel.define4me.swing;
 
 import me.swiftsatchel.define4me.Main;
-import me.swiftsatchel.define4me.util.Define;
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
 
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.File;
-import java.io.FileNotFoundException;
+import java.io.*;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Scanner;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class AppWindow extends JFrame implements ActionListener {
 
@@ -31,6 +36,7 @@ public class AppWindow extends JFrame implements ActionListener {
     private final JMenuItem openPrefs = new JMenuItem("Preferences");
 
     private final ArrayList<String> words = new ArrayList<>(); // Selected file's words
+    ConcurrentHashMap<String, String> definitions = new ConcurrentHashMap<>(); // The word's definitions
 
     public AppWindow() {
 
@@ -91,7 +97,7 @@ public class AppWindow extends JFrame implements ActionListener {
 
         } else if (e.getSource() == defineButton) {
 
-            statusText.setText(Define.allWords(words));
+            statusText.setText(defineWords());
             defineButton.setText("Write to file");
 
         } else if (e.getSource() == openAbout) {
@@ -147,6 +153,80 @@ public class AppWindow extends JFrame implements ActionListener {
         }
 
         return sb.toString();
+
+    }
+
+    private String defineWords() {
+
+        definitions.clear(); // Reset definitions
+        JSONParser parser = new JSONParser();
+
+        // create a thread pool the size of how many we will use, ideally one per word, but if that's more than
+        // the amount of cores available then stop at that number.
+        Thread[] threadList = new Thread[ Math.min(words.size(), Runtime.getRuntime().availableProcessors()) ];
+        for (int i = 0; i < threadList.length; i++) { // Create a new thread for every open spot in threadList
+            int threadNumber = i; // Local value to pass to thread's for loop.
+
+            threadList[i] = new Thread(() -> {
+                for (int w = threadNumber; w < words.size(); w++) { // Start on our thread number, and get words 1 by 1
+                    if (!definitions.containsKey(words.get(w))) { // If the current word has not been defined yet
+                        // Default text + creating the key stops other threads from trying to define it as well.
+                        definitions.put(words.get(w), "No definition found");
+                        try {
+                            getDefinitionOf(parser, words.get(w));
+                        } catch (Exception e) {
+                            System.out.println("Couldn't find a definition for $w!"
+                                    .replace("$w", words.get(w)));
+                        }
+                    }
+                }
+            });
+            threadList[i].start(); // Start thread
+
+        }
+
+        for (Thread t : threadList) { // Wait for all threads to finish.
+            try {
+                t.join();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+
+        StringBuilder sb = new StringBuilder();
+        for (String word : definitions.keySet()) { // Append all definitions to separate lines
+            sb.append(word).append(" - ").append(definitions.get(word)).append("\n");
+        }
+
+        return sb.toString();
+
+    }
+
+    private String getJSONText(Reader r) throws IOException {
+
+        StringBuilder sb = new StringBuilder();
+        int c;
+        while ((c = r.read()) != -1) {
+            sb.append((char) c);
+        }
+        return sb.toString();
+
+    }
+
+    private void getDefinitionOf(JSONParser parser, String w) throws IOException, ParseException {
+
+        InputStream urlStream = new URL("https://api.dictionaryapi.dev/api/v2/entries/en/" + w).openStream();
+        BufferedReader reader = new BufferedReader(new InputStreamReader(urlStream, StandardCharsets.UTF_8));
+        String jsonText = getJSONText(reader);
+
+        JSONArray jsonArray = (JSONArray) parser.parse(jsonText); // Get all of json
+        JSONObject jsonObject = (JSONObject) jsonArray.get(0);  // Get first use of word
+        jsonArray = (JSONArray) jsonObject.get("meanings");     // Get array of "meanings"
+        jsonObject = (JSONObject) jsonArray.get(0);             // Get first object of "meaning"
+        jsonArray = (JSONArray) jsonObject.get("definitions");  // Get array of definitions
+        jsonObject = (JSONObject) jsonArray.get(0);             // Get first definition object
+
+        definitions.put(w, jsonObject.get("definition").toString());
 
     }
 
