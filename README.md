@@ -11,3 +11,7 @@ be stated in the description of the release you are trying to run.
 each line as a new "word", this allows you to have things such as "chat room" which 
 has a space in between the two words and Define4Me will still attempt to find a
 definition for it.
+
+## License
+Define4Me is licensed under the GNU General Public License v3.0, more information can
+be found in the [LICENSE](https://github.com/swiftsatchel/define4me/blob/master/LICENSE) file.
