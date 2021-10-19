@@ -192,7 +192,6 @@ public class AppWindow extends JFrame implements ActionListener {
     private String defineWords() {
 
         definitions.clear(); // Reset definitions
-        JSONParser parser = new JSONParser();
 
         // create a thread pool the size of how many we will use, ideally one per word, but if that's more than
         // the amount of cores available then stop at that number.
@@ -206,7 +205,7 @@ public class AppWindow extends JFrame implements ActionListener {
                         // Default text + creating the key stops other threads from trying to define it as well.
                         definitions.put(words.get(w), "No definition found");
                         try {
-                            getDefinitionOf(parser, words.get(w));
+                            getDefinitionOf(words.get(w));
                         } catch (Exception e) {
                             System.out.println("Couldn't find a definition for $w!"
                                     .replace("$w", words.get(w)));
@@ -238,7 +237,7 @@ public class AppWindow extends JFrame implements ActionListener {
     private String getJSONText(Reader r) throws IOException {
 
         StringBuilder sb = new StringBuilder();
-        int c;
+        int c; // Current character
         while ((c = r.read()) != -1) {
             sb.append((char) c);
         }
@@ -246,9 +245,10 @@ public class AppWindow extends JFrame implements ActionListener {
 
     }
 
-    private void getDefinitionOf(JSONParser parser, String w) throws IOException, ParseException {
+    private void getDefinitionOf(String word) throws IOException, ParseException {
 
-        InputStream urlStream = new URL("https://api.dictionaryapi.dev/api/v2/entries/en/" + w).openStream();
+        JSONParser parser = new JSONParser();
+        InputStream urlStream = new URL("https://api.dictionaryapi.dev/api/v2/entries/en/" + word).openStream();
         BufferedReader reader = new BufferedReader(new InputStreamReader(urlStream, StandardCharsets.UTF_8));
         String jsonText = getJSONText(reader);
 
@@ -259,7 +259,7 @@ public class AppWindow extends JFrame implements ActionListener {
         jsonArray = (JSONArray) jsonObject.get("definitions");  // Get array of definitions
         jsonObject = (JSONObject) jsonArray.get(0);             // Get first definition object
 
-        definitions.put(w, jsonObject.get("definition").toString());
+        definitions.put(word, jsonObject.get("definition").toString());
 
     }
 
