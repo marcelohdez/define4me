@@ -9,7 +9,9 @@ import org.json.simple.parser.ParseException;
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
+import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.StringSelection;
+import java.awt.datatransfer.UnsupportedFlavorException;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.*;
@@ -40,6 +42,7 @@ public class AppWindow extends JFrame implements ActionListener {
 
     // Right click text area menu components:
     private final JPopupMenu rightClickMenu = new JPopupMenu();
+    private final JMenuItem pasteText = new JMenuItem("Paste Text");
     private final JMenuItem copyAllText = new JMenuItem("Copy All");
     private final JMenuItem copySelectedText = new JMenuItem("Copy Selected");
 
@@ -82,6 +85,7 @@ public class AppWindow extends JFrame implements ActionListener {
         openAbout.addActionListener(this);
         copyAllText.addActionListener(this);
         copySelectedText.addActionListener(this);
+        pasteText.addActionListener(this);
 
         statusText.setEditable(false);
         statusText.setLineWrap(true);
@@ -90,6 +94,8 @@ public class AppWindow extends JFrame implements ActionListener {
 
         rightClickMenu.add(copyAllText);
         rightClickMenu.add(copySelectedText);
+        rightClickMenu.add(new JSeparator()); // Separate paste button from copy buttons
+        rightClickMenu.add(pasteText);
 
     }
 
@@ -115,6 +121,16 @@ public class AppWindow extends JFrame implements ActionListener {
             StringSelection text = new StringSelection(statusText.getSelectedText());
             Toolkit.getDefaultToolkit().getSystemClipboard().setContents(text, text);
 
+        } else if (e.getSource().equals(pasteText)) {
+
+            try {
+                String pastedText = (String) Toolkit.getDefaultToolkit().getSystemClipboard().getData(DataFlavor.stringFlavor);
+                scanWith(new Scanner(pastedText), "paste");
+            } catch (IOException | UnsupportedFlavorException ex) {
+                System.out.println("Unable to paste from clipboard! Stack trace:");
+                ex.printStackTrace();
+            }
+
         } else if (e.getSource().equals(openAbout)) {
             new AboutDialog();
         } else if (e.getSource().equals(openPrefs)) {
@@ -130,10 +146,13 @@ public class AppWindow extends JFrame implements ActionListener {
             int returnVal = jfc.showDialog(this, "Define"); // Get return value of it
 
             if (returnVal == JFileChooser.APPROVE_OPTION) { // If file was approved
-                try {
-                    readFile(jfc.getSelectedFile());    // Try to read it
-                    defineButton.setEnabled(true);
-                    defineButton.setText("Define");
+                try { // Try to read it
+                    if (jfc.getSelectedFile().exists()) {
+                        Scanner scanner = new Scanner(jfc.getSelectedFile());
+                        scanWith(scanner, jfc.getSelectedFile().getName());
+                        defineButton.setEnabled(true);
+                        defineButton.setText("Define");
+                    }
                 } catch (Exception x) {
                     System.out.println("Failed to read file! Stack trace:");
                     x.printStackTrace();
@@ -143,12 +162,15 @@ public class AppWindow extends JFrame implements ActionListener {
 
     }
 
-    private void readFile(File file) throws FileNotFoundException {
-
-        if (file.exists()) {
+    /**
+     * Uses the given scanner to find words in text
+     *
+     * @param reader given scanner
+     * @param from name of source
+     */
+    private void scanWith(Scanner reader, String from) {
 
             words.clear(); // Clear list
-            Scanner reader = new Scanner(file);
             StringBuilder wordBuilder;
 
             while (reader.hasNextLine()) {
@@ -172,11 +194,9 @@ public class AppWindow extends JFrame implements ActionListener {
             }
 
             statusText.setText("The $s words in $f:\n"
-                    .replace("$f", file.getName())
+                    .replace("$f", from)
                     .replace("$s", String.valueOf(words.size()))
                     + listWords());
-
-        }
 
     }
 
