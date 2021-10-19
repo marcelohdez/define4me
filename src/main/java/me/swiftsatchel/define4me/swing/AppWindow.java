@@ -21,7 +21,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class AppWindow extends JFrame implements ActionListener {
 
-    JFileChooser jfc; // Our file chooser instance
+    private JFileChooser jfc; // Our file chooser instance
 
     // Main components
     private final JButton chooseButton = new JButton("Choose file");
@@ -227,7 +227,7 @@ public class AppWindow extends JFrame implements ActionListener {
         }
 
         StringBuilder sb = new StringBuilder();
-        for (String word : definitions.keySet()) { // Append all definitions to separate lines
+        for (String word : words) { // Append all definitions to separate lines
             sb.append(word).append(" - ").append(definitions.get(word)).append("\n");
         }
 
