@@ -21,7 +21,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class AppWindow extends JFrame implements ActionListener {
 
-    JFileChooser jfc = new JFileChooser(); // Our file chooser instance
+    JFileChooser jfc; // Our file chooser instance
 
     // Main components
     private final JButton chooseButton = new JButton("Choose file");
@@ -63,6 +63,8 @@ public class AppWindow extends JFrame implements ActionListener {
         setMinimumSize(new Dimension((int) (getWidth()*1.5), (int) (getHeight()*1.5)));
         setLocationRelativeTo(null); // Center on main screen
         setVisible(true);
+
+        SwingUtilities.invokeLater(() -> jfc = new JFileChooser()); // Create file chooser after window's shown.
 
     }
 
@@ -123,15 +125,17 @@ public class AppWindow extends JFrame implements ActionListener {
 
     private void chooseFile() {
 
-        jfc.setFileFilter(new FileNameExtensionFilter("Text Files", "txt")); // Set file filter
-        int returnVal = jfc.showDialog(this, "Define"); // Get return value of it
+        if (jfc != null) { // Make sure we have created the JFileChooser instance
+            jfc.setFileFilter(new FileNameExtensionFilter("Text Files", "txt")); // Set file filter
+            int returnVal = jfc.showDialog(this, "Define"); // Get return value of it
 
-        if (returnVal == JFileChooser.APPROVE_OPTION) { // If file was approved
-            try {
-                readFile(jfc.getSelectedFile());    // Try to read it
-            } catch (Exception x) {
-                System.out.println("Failed to read file! Stack trace:");
-                x.printStackTrace();
+            if (returnVal == JFileChooser.APPROVE_OPTION) { // If file was approved
+                try {
+                    readFile(jfc.getSelectedFile());    // Try to read it
+                } catch (Exception x) {
+                    System.out.println("Failed to read file! Stack trace:");
+                    x.printStackTrace();
+                }
             }
         }
 
