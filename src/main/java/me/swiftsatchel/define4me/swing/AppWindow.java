@@ -143,40 +143,42 @@ public class AppWindow extends JFrame implements ActionListener {
 
     private void readFile(File file) throws FileNotFoundException {
 
-            if (file.exists()) {
+        if (file.exists()) {
 
-                words.clear(); // Clear list
-                Scanner reader = new Scanner(file);
-                StringBuilder wordBuilder;
+            words.clear(); // Clear list
+            Scanner reader = new Scanner(file);
+            StringBuilder wordBuilder;
 
-                while (reader.hasNextLine()) {
+            while (reader.hasNextLine()) {
 
-                    wordBuilder = new StringBuilder();
-                    String nextLine = reader.nextLine(); // Store next line in string
+                wordBuilder = new StringBuilder();
+                String nextLine = reader.nextLine(); // Store next line in string
 
-                    for (int i = 0; i < nextLine.length(); i++) {  // Go through every character in string
-                        // Check if it is accepted
-                        if (Main.ACCEPTED.contains(nextLine.substring(i, i+1).toLowerCase())) {
+                for (int i = 0; i < nextLine.length(); i++) {  // Go through every character in string
+                    // Check if it is accepted
+                    if (Main.ACCEPTED.contains(nextLine.substring(i, i+1).toLowerCase())) {
 
-                            if (nextLine.startsWith(" -", i)) { // If current and next character is " -"
-                                break; // Go to next line, for lists written with hyphens after words
-                            }
-                            wordBuilder.append(nextLine.charAt(i));
-
+                        if (nextLine.startsWith(" -", i)) { // If current and next character is " -"
+                            break; // Go to next line, for lists written with hyphens after words
                         }
-                    }
+                        wordBuilder.append(nextLine.charAt(i));
 
-                    words.add(wordBuilder.toString());
+                    }
                 }
 
-                statusText.setText("Words in " + file.getName() + ":\n" + wordsList());
-                defineButton.setEnabled(true);
-
+                words.add(wordBuilder.toString());
             }
+
+            statusText.setText("The $s words in $f:\n"
+                    .replace("$f", file.getName())
+                    .replace("$s", String.valueOf(words.size()))
+                    + listWords());
+
+        }
 
     }
 
-    private String wordsList() {
+    private String listWords() {
 
         StringBuilder sb = new StringBuilder();
 
