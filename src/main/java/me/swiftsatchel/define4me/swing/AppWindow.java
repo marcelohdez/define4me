@@ -132,6 +132,8 @@ public class AppWindow extends JFrame implements ActionListener {
             if (returnVal == JFileChooser.APPROVE_OPTION) { // If file was approved
                 try {
                     readFile(jfc.getSelectedFile());    // Try to read it
+                    defineButton.setEnabled(true);
+                    defineButton.setText("Define");
                 } catch (Exception x) {
                     System.out.println("Failed to read file! Stack trace:");
                     x.printStackTrace();
