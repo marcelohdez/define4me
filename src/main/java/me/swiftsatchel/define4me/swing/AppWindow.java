@@ -108,7 +108,9 @@ public class AppWindow extends JFrame implements ActionListener {
 
         } else if (e.getSource().equals(defineButton)) {
 
+            this.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR)); // Set loading cursor
             statusText.setText(defineWords());
+            this.setCursor(Cursor.getDefaultCursor()); // Remove loading cursor
             defineButton.setText("Write to file");
 
         } else if (e.getSource().equals(copyAllText)) {
