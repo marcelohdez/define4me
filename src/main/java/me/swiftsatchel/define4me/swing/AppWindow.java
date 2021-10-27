@@ -92,7 +92,7 @@ public class AppWindow extends JFrame implements ActionListener {
         menuBar.add(wordsMenu);
 
         defineButton.setEnabled(false); // Disable define button until we have selected a file
-        addThisAsActionListenerTo(chooseButton, defineButton, removeButton, addButton, openAbout, openPrefs,
+        addThisAsALAndSetHandCursor(chooseButton, defineButton, removeButton, addButton, openAbout, openPrefs,
                 pasteText, copyAllText, copySelectedText);
 
         statusText.setEditable(false);
@@ -106,12 +106,14 @@ public class AppWindow extends JFrame implements ActionListener {
     }
 
     /**
-     * Adds this as ActionLister to the given abstract buttons.
-     * @param buttons Buttons to set this as ActionListener on
+     * Adds this as ActionLister and sets cursor to hand cursor on the given abstract buttons.
+     * @param buttons Buttons to add this as ActionListener and hand cursor on
      */
-    private void addThisAsActionListenerTo(AbstractButton... buttons) {
-        for (AbstractButton b : buttons)
+    private void addThisAsALAndSetHandCursor(AbstractButton... buttons) {
+        for (AbstractButton b : buttons) {
             b.addActionListener(this);
+            b.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        }
     }
 
     private void removeSelectedWord() {
