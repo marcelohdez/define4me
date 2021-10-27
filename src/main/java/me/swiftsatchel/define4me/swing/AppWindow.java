@@ -24,15 +24,23 @@ import java.util.concurrent.ConcurrentHashMap;
 public class AppWindow extends JFrame implements ActionListener {
 
     private JFileChooser jfc; // Our file chooser instance
+    private final ArrayList<String> wordsArray = new ArrayList<>(); // Current list of words
+    private final ConcurrentHashMap<String, String> definitions = new ConcurrentHashMap<>(); // Word definitions
 
     // Main components
     private final JButton chooseButton = new JButton("Choose file");
     private final JButton defineButton = new JButton("Define");
 
+    private final JButton removeButton = new JButton("Remove");
+    private final JButton addButton = new JButton("Add");
+    private final DefaultListModel<String> words = new DefaultListModel<>();
+    private final JList<String> wordList = new JList<>(words);
+
     private final JTextArea statusText = new JTextArea("""
-            No file selected.
-            Words found in the selected file will be shown here
+            No words have been defined yet.
             """);
+
+    private final JTabbedPane centerTabbedPane = new JTabbedPane();
 
     // Top menu bar components:
     private final JMenuBar menuBar = new JMenuBar();
@@ -40,14 +48,13 @@ public class AppWindow extends JFrame implements ActionListener {
     private final JMenuItem openAbout = new JMenuItem("About");
     private final JMenuItem openPrefs = new JMenuItem("Preferences");
 
+    private final JMenu wordsMenu = new JMenu("Words");
+    private final JMenuItem pasteText = new JMenuItem("Paste Text");
+
     // Right click text area menu components:
     private final JPopupMenu rightClickMenu = new JPopupMenu();
-    private final JMenuItem pasteText = new JMenuItem("Paste Text");
     private final JMenuItem copyAllText = new JMenuItem("Copy All");
     private final JMenuItem copySelectedText = new JMenuItem("Copy Selected");
-
-    private final ArrayList<String> words = new ArrayList<>(); // Selected file's words
-    ConcurrentHashMap<String, String> definitions = new ConcurrentHashMap<>(); // The word's definitions
 
     public AppWindow() {
 
@@ -56,14 +63,18 @@ public class AppWindow extends JFrame implements ActionListener {
 
         setJMenuBar(menuBar);
         add(chooseButton, BorderLayout.WEST);
-        JScrollPane pane = new JScrollPane(statusText);
-        add(pane, BorderLayout.CENTER);
+        ControlsAndListPane wordsPane = new ControlsAndListPane(wordList, addButton, removeButton);
+        JScrollPane definitionsPane = new JScrollPane(statusText);
+        centerTabbedPane.addTab("Words", wordsPane);
+        centerTabbedPane.addTab("Definitions", definitionsPane);
+        add(centerTabbedPane, BorderLayout.CENTER);
         add(defineButton, BorderLayout.EAST);
 
         initComps();
 
         pack();
-        setMinimumSize(new Dimension((int) (getWidth()*1.5), (int) (getHeight()*1.5)));
+        setMinimumSize(getSize());
+        setSize(new Dimension((int) (getWidth()*1.2), (int) (getHeight()*1.2)));
         setLocationRelativeTo(null); // Center on main screen
         setVisible(true);
 
@@ -76,16 +87,13 @@ public class AppWindow extends JFrame implements ActionListener {
 
         fileMenu.add(openAbout);
         fileMenu.add(openPrefs);
+        wordsMenu.add(pasteText);
         menuBar.add(fileMenu);
+        menuBar.add(wordsMenu);
 
-        chooseButton.addActionListener(this);
-        defineButton.addActionListener(this);
         defineButton.setEnabled(false); // Disable define button until we have selected a file
-        openPrefs.addActionListener(this);
-        openAbout.addActionListener(this);
-        copyAllText.addActionListener(this);
-        copySelectedText.addActionListener(this);
-        pasteText.addActionListener(this);
+        addThisAsActionListenerTo(chooseButton, defineButton, removeButton, addButton, openAbout, openPrefs,
+                pasteText, copyAllText, copySelectedText);
 
         statusText.setEditable(false);
         statusText.setLineWrap(true);
@@ -94,8 +102,26 @@ public class AppWindow extends JFrame implements ActionListener {
 
         rightClickMenu.add(copyAllText);
         rightClickMenu.add(copySelectedText);
-        rightClickMenu.add(new JSeparator()); // Separate paste button from copy buttons
-        rightClickMenu.add(pasteText);
+
+    }
+
+    /**
+     * Adds this as ActionLister to the given abstract buttons.
+     * @param buttons Buttons to set this as ActionListener on
+     */
+    private void addThisAsActionListenerTo(AbstractButton... buttons) {
+        for (AbstractButton b : buttons)
+            b.addActionListener(this);
+    }
+
+    private void removeSelectedWord() {
+
+        if (!wordList.isSelectionEmpty()) {
+            int index = wordList.getSelectedIndex();
+            wordsArray.remove(index);
+            words.remove(index);
+            wordList.setSelectedIndex(index - 1); // Keep selection on one index below
+        }
 
     }
 
@@ -110,8 +136,13 @@ public class AppWindow extends JFrame implements ActionListener {
 
             this.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR)); // Set loading cursor
             statusText.setText(defineWords());
+            centerTabbedPane.setSelectedIndex(1); // Switch to definitions tab
             this.setCursor(Cursor.getDefaultCursor()); // Remove loading cursor
             defineButton.setText("Write to file");
+
+        } else if (e.getSource().equals(removeButton)) {
+
+            removeSelectedWord();
 
         } else if (e.getSource().equals(copyAllText)) {
 
@@ -127,7 +158,8 @@ public class AppWindow extends JFrame implements ActionListener {
 
             try {
                 String pastedText = (String) Toolkit.getDefaultToolkit().getSystemClipboard().getData(DataFlavor.stringFlavor);
-                scanWith(new Scanner(pastedText), "paste");
+                scanWith(new Scanner(pastedText));
+                centerTabbedPane.setSelectedIndex(0); // Switch back to words tab
             } catch (IOException | UnsupportedFlavorException ex) {
                 System.out.println("Unable to paste from clipboard! Stack trace:");
                 ex.printStackTrace();
@@ -151,7 +183,7 @@ public class AppWindow extends JFrame implements ActionListener {
                 try { // Try to read it
                     if (jfc.getSelectedFile().exists()) {
                         Scanner scanner = new Scanner(jfc.getSelectedFile());
-                        scanWith(scanner, jfc.getSelectedFile().getName());
+                        scanWith(scanner);
                         defineButton.setEnabled(true);
                         defineButton.setText("Define");
                     }
@@ -168,50 +200,33 @@ public class AppWindow extends JFrame implements ActionListener {
      * Uses the given scanner to find words in text
      *
      * @param reader given scanner
-     * @param from name of source
      */
-    private void scanWith(Scanner reader, String from) {
+    private void scanWith(Scanner reader) {
 
-            words.clear(); // Clear list
-            StringBuilder wordBuilder;
+        wordsArray.clear(); // Clear list
+        words.clear();
+        StringBuilder wordBuilder;
 
-            while (reader.hasNextLine()) {
+        while (reader.hasNextLine()) {
 
-                wordBuilder = new StringBuilder();
-                String nextLine = reader.nextLine(); // Store next line in string
+            wordBuilder = new StringBuilder();
+            String nextLine = reader.nextLine(); // Store next line in string
 
-                for (int i = 0; i < nextLine.length(); i++) {  // Go through every character in string
-                    // Check if it is accepted
-                    if (Main.ACCEPTED.contains(nextLine.substring(i, i+1).toLowerCase())) {
+            for (int i = 0; i < nextLine.length(); i++) {  // Go through every character in string
+                // Check if it is accepted
+                if (Main.ACCEPTED.contains(nextLine.substring(i, i+1).toLowerCase())) {
 
-                        if (nextLine.startsWith(" -", i)) { // If current and next character is " -"
-                            break; // Go to next line, for lists written with hyphens after words
-                        }
-                        wordBuilder.append(nextLine.charAt(i));
-
+                    if (nextLine.startsWith(" -", i)) { // If current and next character is " -"
+                        break; // Go to next line, for lists written with hyphens after words
                     }
-                }
+                    wordBuilder.append(nextLine.charAt(i));
 
-                words.add(wordBuilder.toString());
+                }
             }
 
-            statusText.setText("The $s words in $f:\n"
-                    .replace("$f", from)
-                    .replace("$s", String.valueOf(words.size()))
-                    + listWords());
-
-    }
-
-    private String listWords() {
-
-        StringBuilder sb = new StringBuilder();
-
-        for (int i = 0; i < words.size(); i++) {
-            if (i > 0) sb.append(", ");
-            sb.append(words.get(i));
+            wordsArray.add(wordBuilder.toString());
+            words.addElement(wordBuilder.toString());
         }
-
-        return sb.toString();
 
     }
 
@@ -221,20 +236,22 @@ public class AppWindow extends JFrame implements ActionListener {
 
         // create a thread pool the size of how many we will use, ideally one per word, but if that's more than
         // the amount of cores available then stop at that number.
-        Thread[] threadList = new Thread[ Math.min(words.size(), Runtime.getRuntime().availableProcessors()) ];
+        Thread[] threadList = new Thread[
+                Math.min(Runtime.getRuntime().availableProcessors(), Math.min(wordsArray.size(), 16)) ];
+
         for (int i = 0; i < threadList.length; i++) { // Create a new thread for every open spot in threadList
             int threadNumber = i; // Local value to pass to thread's for loop.
 
             threadList[i] = new Thread(() -> {
-                for (int w = threadNumber; w < words.size(); w++) { // Start on our thread number, and get words 1 by 1
-                    if (!definitions.containsKey(words.get(w))) { // If the current word has not been defined yet
+                for (int w = threadNumber; w < wordsArray.size(); w++) { // Start on our thread number, and get words 1 by 1
+                    if (!definitions.containsKey(wordsArray.get(w))) { // If the current word has not been defined yet
                         // Default text + creating the key stops other threads from trying to define it as well.
-                        definitions.put(words.get(w), "No definition found");
+                        definitions.put(wordsArray.get(w), "No definition found");
                         try {
-                            getDefinitionOf(words.get(w));
+                            getDefinitionOf(wordsArray.get(w));
                         } catch (Exception e) {
                             System.out.println("Couldn't find a definition for $w!"
-                                    .replace("$w", words.get(w)));
+                                    .replace("$w", wordsArray.get(w)));
                         }
                     }
                 }
@@ -252,7 +269,7 @@ public class AppWindow extends JFrame implements ActionListener {
         }
 
         StringBuilder sb = new StringBuilder();
-        for (String word : words) { // Append all definitions to separate lines
+        for (String word : wordsArray) { // Append all definitions to separate lines
             sb.append(word).append(" - ").append(definitions.get(word)).append("\n");
         }
 
