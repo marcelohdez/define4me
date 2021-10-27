@@ -226,8 +226,11 @@ public class AppWindow extends JFrame implements ActionListener {
                 }
             }
 
-            wordsArray.add(wordBuilder.toString());
-            words.addElement(wordBuilder.toString());
+            String word = wordBuilder.toString();
+            if (!word.isBlank()) { // Make sure we are not adding a blank string
+                wordsArray.add(word);
+                words.addElement(word);
+            }
         }
 
     }
