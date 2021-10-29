@@ -63,9 +63,8 @@ public class AppWindow extends JFrame implements ActionListener {
 
         setJMenuBar(menuBar);
         add(chooseButton, BorderLayout.WEST);
-        ControlsAndListPane wordsPane = new ControlsAndListPane(wordList, addButton, removeButton);
         JScrollPane definitionsPane = new JScrollPane(statusText);
-        centerTabbedPane.addTab("Words", wordsPane);
+        centerTabbedPane.addTab("Words", createListAndButtonsPanel());
         centerTabbedPane.addTab("Definitions", definitionsPane);
         add(centerTabbedPane, BorderLayout.CENTER);
         add(defineButton, BorderLayout.EAST);
@@ -79,6 +78,23 @@ public class AppWindow extends JFrame implements ActionListener {
         setVisible(true);
 
         SwingUtilities.invokeLater(() -> jfc = new JFileChooser()); // Create file chooser after window's shown.
+
+    }
+
+    private JPanel createListAndButtonsPanel() {
+
+        JPanel pnl = new JPanel();
+
+        pnl.setLayout(new BorderLayout());
+        pnl.add(new JScrollPane(wordList), BorderLayout.CENTER);
+
+        JPanel buttonPanel = new JPanel();
+        buttonPanel.add(addButton);
+        buttonPanel.add(removeButton);
+
+        pnl.add(buttonPanel, BorderLayout.SOUTH);
+
+        return pnl;
 
     }
 
@@ -145,6 +161,15 @@ public class AppWindow extends JFrame implements ActionListener {
         } else if (e.getSource().equals(removeButton)) {
 
             removeSelectedWord();
+
+        } else if (e.getSource().equals(addButton)) {
+
+            AddWordDialog awd = new AddWordDialog();
+            if (awd.accepted()) {
+                wordsArray.add(awd.getWord());
+                words.addElement(awd.getWord());
+            }
+            awd.dispose();
 
         } else if (e.getSource().equals(copyAllText)) {
 
@@ -240,7 +265,7 @@ public class AppWindow extends JFrame implements ActionListener {
         definitions.clear(); // Reset definitions
 
         // create a thread pool the size of how many we will use, ideally one per word, but if that's more than
-        // the amount of cores available then stop at that number.
+        // the amount of cores available then stop at that number. (also 16 is ConcurrentHashMap's concurrent limit)
         Thread[] threadList = new Thread[
                 Math.min(Runtime.getRuntime().availableProcessors(), Math.min(wordsArray.size(), 16)) ];
 
