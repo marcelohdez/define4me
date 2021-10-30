@@ -107,7 +107,7 @@ public class AppWindow extends JFrame implements ActionListener {
         menuBar.add(fileMenu);
         menuBar.add(wordsMenu);
 
-        defineButton.setEnabled(false); // Disable define button until we have selected a file
+        defineButton.setEnabled(false); // Disable define button until we have words to define
         addThisAsALAndSetHandCursor(chooseButton, defineButton, removeButton, addButton, openAbout, openPrefs,
                 pasteText, copyAllText, copySelectedText);
 
@@ -139,7 +139,16 @@ public class AppWindow extends JFrame implements ActionListener {
             wordsArray.remove(index);
             words.remove(index);
             wordList.setSelectedIndex(index - 1); // Keep selection on one index below
+            defineButton.setEnabled(wordsArray.size() > 0);
         }
+
+    }
+
+    private void addWord(String word) {
+
+        wordsArray.add(word);
+        words.addElement(word);
+        defineButton.setEnabled(wordsArray.size() > 0);
 
     }
 
@@ -166,8 +175,7 @@ public class AppWindow extends JFrame implements ActionListener {
 
             AddWordDialog awd = new AddWordDialog();
             if (awd.accepted()) {
-                wordsArray.add(awd.getWord());
-                words.addElement(awd.getWord());
+                addWord(awd.getWord());
             }
             awd.dispose();
 
@@ -211,7 +219,6 @@ public class AppWindow extends JFrame implements ActionListener {
                     if (jfc.getSelectedFile().exists()) {
                         Scanner scanner = new Scanner(jfc.getSelectedFile());
                         scanWith(scanner);
-                        defineButton.setEnabled(true);
                         defineButton.setText("Define");
                     }
                 } catch (Exception x) {
@@ -252,10 +259,8 @@ public class AppWindow extends JFrame implements ActionListener {
             }
 
             String word = wordBuilder.toString();
-            if (!word.isBlank()) { // Make sure we are not adding a blank string
-                wordsArray.add(word);
-                words.addElement(word);
-            }
+            // Make sure we are not adding a blank string
+            if (!word.isBlank()) addWord(word);
         }
 
     }
