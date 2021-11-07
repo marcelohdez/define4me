@@ -58,7 +58,7 @@ public class AppWindow extends JFrame implements ActionListener, KeyListener {
     private final JPopupMenu rightClickWords = new JPopupMenu();
     private final JMenuItem editWord = new JMenuItem("Edit");
 
-    private int lastKeyPressed;
+    private int keyBeingPressed;
 
     public AppWindow() {
 
@@ -267,18 +267,15 @@ public class AppWindow extends JFrame implements ActionListener, KeyListener {
             for (int i = 0; i < nextLine.length(); i++) {  // Go through every character in string
                 // Check if it is accepted
                 if (Main.ACCEPTED.contains(nextLine.substring(i, i+1).toLowerCase())) {
-
                     if (nextLine.startsWith(" -", i)) { // If current and next character is " -"
                         break; // Go to next line, for lists written with hyphens after words
                     }
                     wordBuilder.append(nextLine.charAt(i));
-
                 }
             }
 
             String word = wordBuilder.toString();
-            // Make sure we are not adding a blank string
-            if (!word.isBlank()) addWord(word);
+            if (!word.isBlank()) addWord(word); // If word si not blank then add it
         }
 
     }
@@ -379,21 +376,24 @@ public class AppWindow extends JFrame implements ActionListener, KeyListener {
 
         switch (e.getKeyCode()) {
             case KeyEvent.VK_V -> {
-                if (lastKeyPressed == KeyEvent.VK_CONTROL || lastKeyPressed == KeyEvent.VK_META) paste();
+                if (keyBeingPressed == KeyEvent.VK_CONTROL || keyBeingPressed == KeyEvent.VK_META) paste();
             }
             case KeyEvent.VK_C -> {
-                if (lastKeyPressed == KeyEvent.VK_CONTROL || lastKeyPressed == KeyEvent.VK_META)
+                if (keyBeingPressed == KeyEvent.VK_CONTROL || keyBeingPressed == KeyEvent.VK_META)
                     copy(new StringSelection(statusText.getText()));
             }
             case KeyEvent.VK_BACK_SPACE -> removeSelectedWord();
         }
 
-        lastKeyPressed = e.getKeyCode();
+        keyBeingPressed = e.getKeyCode();
+    }
+
+    @Override
+    public void keyReleased(KeyEvent e) {
+        keyBeingPressed = -1;
     }
 
     @Override
     public void keyTyped(KeyEvent e) {}
-    @Override
-    public void keyReleased(KeyEvent e) {}
 
 }
