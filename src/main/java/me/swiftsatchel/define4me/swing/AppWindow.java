@@ -1,6 +1,10 @@
 package me.swiftsatchel.define4me.swing;
 
 import me.swiftsatchel.define4me.Main;
+import me.swiftsatchel.define4me.swing.dialog.AboutDialog;
+import me.swiftsatchel.define4me.swing.dialog.AddWordDialog;
+import me.swiftsatchel.define4me.swing.dialog.EditWordDialog;
+import me.swiftsatchel.define4me.swing.dialog.PrefsDialog;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;

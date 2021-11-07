@@ -1,4 +1,4 @@
-package me.swiftsatchel.define4me.swing;
+package me.swiftsatchel.define4me.swing.dialog;
 
 import me.swiftsatchel.define4me.Main;
 
