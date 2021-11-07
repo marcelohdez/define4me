@@ -52,13 +52,13 @@ public class AddWordDialog extends JDialog implements ActionListener {
         if (e.getSource().equals(acceptButton)) {
 
             boolean allowed = true;
-            for (int i = 0; i < textField.getText().length(); i++) {
+            for (int i = 0; i < textField.getText().length(); i++) { // Make sure all characters are allowed
                 if (! (Main.ACCEPTED.contains(textField.getText().substring(i, i+1).toLowerCase()))) {
                     allowed = false;
                 }
             }
 
-            if (allowed) {
+            if (allowed && !textField.getText().isBlank()) { // If all characters passed check and word is not blank
                 accepted = true;
                 setVisible(false);
             }
