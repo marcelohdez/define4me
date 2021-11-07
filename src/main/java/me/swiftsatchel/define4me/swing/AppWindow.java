@@ -245,7 +245,7 @@ public class AppWindow extends JFrame implements ActionListener, KeyListener {
                 try { // Try to read it
                     if (jfc.getSelectedFile().exists()) {
                         Scanner scanner = new Scanner(jfc.getSelectedFile());
-                        scanWith(scanner);
+                        getWordsFrom(scanner);
                     }
                 } catch (Exception x) {
                     System.out.println("Failed to read file! Stack trace:");
@@ -261,7 +261,7 @@ public class AppWindow extends JFrame implements ActionListener, KeyListener {
      *
      * @param reader given scanner
      */
-    private void scanWith(Scanner reader) {
+    private void getWordsFrom(Scanner reader) {
 
         wordsArray.clear(); // Clear list
         words.clear();
@@ -272,7 +272,15 @@ public class AppWindow extends JFrame implements ActionListener, KeyListener {
             wordBuilder = new StringBuilder();
             String nextLine = reader.nextLine(); // Store next line in string
 
+            boolean hasReachedLetter = false; // Used to get rid of extra white space at start (ex: "   hello")
             for (int i = 0; i < nextLine.length(); i++) {  // Go through every character in string
+                // If we reached a letter hasReachedLetter is true
+                if (!nextLine.substring(i, i+1).isBlank()) {
+                    hasReachedLetter = true;
+                } else { // else if we are at a blank and haven't reached a letter before, move on to next character
+                    if (!hasReachedLetter) break;
+                }
+
                 // Check if it is accepted
                 if (Main.ACCEPTED.contains(nextLine.substring(i, i+1).toLowerCase())) {
                     if (nextLine.startsWith(" -", i)) { // If current and next character is " -"
@@ -367,7 +375,7 @@ public class AppWindow extends JFrame implements ActionListener, KeyListener {
     private void paste() {
         try {
             String pastedText = (String) Toolkit.getDefaultToolkit().getSystemClipboard().getData(DataFlavor.stringFlavor);
-            scanWith(new Scanner(pastedText));
+            getWordsFrom(new Scanner(pastedText));
             centerTabbedPane.setSelectedIndex(0); // Switch back to words tab
         } catch (IOException | UnsupportedFlavorException ex) {
             System.out.println("Unable to paste from clipboard! Stack trace:");
