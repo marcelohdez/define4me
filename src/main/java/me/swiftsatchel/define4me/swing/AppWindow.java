@@ -184,13 +184,11 @@ public class AppWindow extends JFrame implements ActionListener, KeyListener {
 
         } else if (e.getSource().equals(copyAllText)) {
 
-            StringSelection text = new StringSelection(statusText.getText());
-            Toolkit.getDefaultToolkit().getSystemClipboard().setContents(text, text);
+            copy(new StringSelection(statusText.getText()));
 
         } else if (e.getSource().equals(copySelectedText)) {
 
-            StringSelection text = new StringSelection(statusText.getSelectedText());
-            Toolkit.getDefaultToolkit().getSystemClipboard().setContents(text, text);
+            copy(new StringSelection(statusText.getSelectedText()));
 
         } else if (e.getSource().equals(pasteText)) {
 
@@ -347,12 +345,20 @@ public class AppWindow extends JFrame implements ActionListener, KeyListener {
         }
     }
 
+    private void copy(StringSelection text) {
+        Toolkit.getDefaultToolkit().getSystemClipboard().setContents(text, text);
+    }
+
     @Override
     public void keyPressed(KeyEvent e) {
 
         switch (e.getKeyCode()) {
             case KeyEvent.VK_V -> {
                 if (lastKeyPressed == KeyEvent.VK_CONTROL || lastKeyPressed == KeyEvent.VK_META) paste();
+            }
+            case KeyEvent.VK_C -> {
+                if (lastKeyPressed == KeyEvent.VK_CONTROL || lastKeyPressed == KeyEvent.VK_META)
+                    copy(new StringSelection(statusText.getText()));
             }
             case KeyEvent.VK_BACK_SPACE -> removeSelectedWord();
         }
