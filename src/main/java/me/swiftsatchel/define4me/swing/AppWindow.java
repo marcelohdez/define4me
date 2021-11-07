@@ -14,6 +14,8 @@ import java.awt.datatransfer.StringSelection;
 import java.awt.datatransfer.UnsupportedFlavorException;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.io.*;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
@@ -21,7 +23,7 @@ import java.util.ArrayList;
 import java.util.Scanner;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class AppWindow extends JFrame implements ActionListener {
+public class AppWindow extends JFrame implements ActionListener, KeyListener {
 
     private JFileChooser jfc; // Our file chooser instance
     private final ArrayList<String> wordsArray = new ArrayList<>(); // Current list of words
@@ -35,14 +37,12 @@ public class AppWindow extends JFrame implements ActionListener {
     private final JButton addButton = new JButton("Add");
     private final DefaultListModel<String> words = new DefaultListModel<>();
     private final JList<String> wordList = new JList<>(words);
-
     private final JTextArea statusText = new JTextArea("""
             No words have been defined yet.
             """);
 
     private final JTabbedPane centerTabbedPane = new JTabbedPane();
 
-    // Top menu bar components:
     private final JMenuBar menuBar = new JMenuBar();
     private final JMenu fileMenu = new JMenu("File");
     private final JMenuItem openAbout = new JMenuItem("About");
@@ -51,21 +51,22 @@ public class AppWindow extends JFrame implements ActionListener {
     private final JMenu wordsMenu = new JMenu("Words");
     private final JMenuItem pasteText = new JMenuItem("Paste Text");
 
-    // Right click text area menu components:
     private final JPopupMenu rightClickMenu = new JPopupMenu();
     private final JMenuItem copyAllText = new JMenuItem("Copy All");
     private final JMenuItem copySelectedText = new JMenuItem("Copy Selected");
+
+    private int lastKeyPressed;
 
     public AppWindow() {
 
         setTitle("Define4Me");
         setDefaultCloseOperation(EXIT_ON_CLOSE);
+        addKeyListener(this);
 
         setJMenuBar(menuBar);
         add(chooseButton, BorderLayout.WEST);
-        JScrollPane definitionsPane = new JScrollPane(statusText);
         centerTabbedPane.addTab("Words", createListAndButtonsPanel());
-        centerTabbedPane.addTab("Definitions", definitionsPane);
+        centerTabbedPane.addTab("Definitions", new JScrollPane(statusText));
         add(centerTabbedPane, BorderLayout.CENTER);
         add(defineButton, BorderLayout.EAST);
 
@@ -108,13 +109,15 @@ public class AppWindow extends JFrame implements ActionListener {
         menuBar.add(wordsMenu);
 
         defineButton.setEnabled(false); // Disable define button until we have words to define
-        addThisAsALAndSetHandCursor(chooseButton, defineButton, removeButton, addButton, openAbout, openPrefs,
+        initButtons(chooseButton, defineButton, removeButton, addButton, openAbout, openPrefs,
                 pasteText, copyAllText, copySelectedText);
 
         statusText.setEditable(false);
         statusText.setLineWrap(true);
         statusText.setWrapStyleWord(true);
         statusText.setComponentPopupMenu(rightClickMenu);
+
+        wordList.addKeyListener(this);
 
         rightClickMenu.add(copyAllText);
         rightClickMenu.add(copySelectedText);
@@ -125,9 +128,10 @@ public class AppWindow extends JFrame implements ActionListener {
      * Adds this as ActionLister and sets cursor to hand cursor on the given abstract buttons.
      * @param buttons Buttons to add this as ActionListener and hand cursor on
      */
-    private void addThisAsALAndSetHandCursor(AbstractButton... buttons) {
+    private void initButtons(AbstractButton... buttons) {
         for (AbstractButton b : buttons) {
             b.addActionListener(this);
+            b.addKeyListener(this);
             b.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         }
     }
@@ -191,14 +195,7 @@ public class AppWindow extends JFrame implements ActionListener {
 
         } else if (e.getSource().equals(pasteText)) {
 
-            try {
-                String pastedText = (String) Toolkit.getDefaultToolkit().getSystemClipboard().getData(DataFlavor.stringFlavor);
-                scanWith(new Scanner(pastedText));
-                centerTabbedPane.setSelectedIndex(0); // Switch back to words tab
-            } catch (IOException | UnsupportedFlavorException ex) {
-                System.out.println("Unable to paste from clipboard! Stack trace:");
-                ex.printStackTrace();
-            }
+            paste();
 
         } else if (e.getSource().equals(openAbout)) {
             new AboutDialog();
@@ -340,5 +337,34 @@ public class AppWindow extends JFrame implements ActionListener {
         definitions.put(word, jsonObject.get("definition").toString());
 
     }
+
+    private void paste() {
+        try {
+            String pastedText = (String) Toolkit.getDefaultToolkit().getSystemClipboard().getData(DataFlavor.stringFlavor);
+            scanWith(new Scanner(pastedText));
+            centerTabbedPane.setSelectedIndex(0); // Switch back to words tab
+        } catch (IOException | UnsupportedFlavorException ex) {
+            System.out.println("Unable to paste from clipboard! Stack trace:");
+            ex.printStackTrace();
+        }
+    }
+
+    @Override
+    public void keyPressed(KeyEvent e) {
+
+        switch (e.getKeyCode()) {
+            case KeyEvent.VK_V -> {
+                if (lastKeyPressed == KeyEvent.VK_CONTROL || lastKeyPressed == KeyEvent.VK_META) paste();
+            }
+            case KeyEvent.VK_BACK_SPACE -> removeSelectedWord();
+        }
+
+        lastKeyPressed = e.getKeyCode();
+    }
+
+    @Override
+    public void keyTyped(KeyEvent e) {}
+    @Override
+    public void keyReleased(KeyEvent e) {}
 
 }
