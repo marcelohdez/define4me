@@ -11,7 +11,7 @@ public class AddWordDialog extends JDialog implements ActionListener {
 
     private boolean accepted = false;
 
-    private final JTextField textField = new JTextField();
+    protected final JTextField textField = new JTextField();
     private final JButton acceptButton = new JButton("Accept");
 
     public AddWordDialog() {
@@ -37,18 +37,13 @@ public class AddWordDialog extends JDialog implements ActionListener {
     }
 
     public boolean accepted() {
-
         setLocationRelativeTo(null);
         setVisible(true);
-
         return accepted;
-
     }
 
     public String getWord() {
-
         return textField.getText();
-
     }
 
     @Override

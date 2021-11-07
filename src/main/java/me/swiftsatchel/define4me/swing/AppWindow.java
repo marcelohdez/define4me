@@ -42,18 +42,21 @@ public class AppWindow extends JFrame implements ActionListener, KeyListener {
             """);
 
     private final JTabbedPane centerTabbedPane = new JTabbedPane();
-
+    // Menu bar stuffs: File menu
     private final JMenuBar menuBar = new JMenuBar();
     private final JMenu fileMenu = new JMenu("File");
     private final JMenuItem openAbout = new JMenuItem("About");
     private final JMenuItem openPrefs = new JMenuItem("Preferences");
-
+    // Words menu
     private final JMenu wordsMenu = new JMenu("Words");
     private final JMenuItem pasteText = new JMenuItem("Paste Text");
-
+    // Right click menus: Text area
     private final JPopupMenu rightClickMenu = new JPopupMenu();
     private final JMenuItem copyAllText = new JMenuItem("Copy All");
     private final JMenuItem copySelectedText = new JMenuItem("Copy Selected");
+    // Words list
+    private final JPopupMenu rightClickWords = new JPopupMenu();
+    private final JMenuItem editWord = new JMenuItem("Edit");
 
     private int lastKeyPressed;
 
@@ -110,7 +113,7 @@ public class AppWindow extends JFrame implements ActionListener, KeyListener {
 
         defineButton.setEnabled(false); // Disable define button until we have words to define
         initButtons(chooseButton, defineButton, removeButton, addButton, openAbout, openPrefs,
-                pasteText, copyAllText, copySelectedText);
+                pasteText, copyAllText, copySelectedText, editWord);
 
         statusText.setEditable(false);
         statusText.setLineWrap(true);
@@ -118,6 +121,8 @@ public class AppWindow extends JFrame implements ActionListener, KeyListener {
         statusText.setComponentPopupMenu(rightClickMenu);
 
         wordList.addKeyListener(this);
+        rightClickWords.add(editWord);
+        wordList.setComponentPopupMenu(rightClickWords);
 
         rightClickMenu.add(copyAllText);
         rightClickMenu.add(copySelectedText);
@@ -148,12 +153,30 @@ public class AppWindow extends JFrame implements ActionListener, KeyListener {
 
     }
 
-    private void addWord(String word) {
+    private void editSelectedWord() {
 
+        if (!wordList.isSelectionEmpty()) {
+            int index = wordList.getSelectedIndex();
+            EditWordDialog ewd = new EditWordDialog(words.get(index));
+            if (ewd.accepted()) {
+                removeSelectedWord();
+                addWordAt(ewd.getWord(), index);
+            }
+            ewd.dispose();
+        }
+
+    }
+
+    private void addWord(String word) {
         wordsArray.add(word);
         words.addElement(word);
         defineButton.setEnabled(wordsArray.size() > 0);
+    }
 
+    private void addWordAt(String word, int index) {
+        wordsArray.add(index, word);
+        words.add(index, word);
+        defineButton.setEnabled(wordsArray.size() > 0);
     }
 
     @Override
@@ -177,9 +200,7 @@ public class AppWindow extends JFrame implements ActionListener, KeyListener {
         } else if (e.getSource().equals(addButton)) {
 
             AddWordDialog awd = new AddWordDialog();
-            if (awd.accepted()) {
-                addWord(awd.getWord());
-            }
+            if (awd.accepted()) addWord(awd.getWord());
             awd.dispose();
 
         } else if (e.getSource().equals(copyAllText)) {
@@ -198,6 +219,10 @@ public class AppWindow extends JFrame implements ActionListener, KeyListener {
             new AboutDialog();
         } else if (e.getSource().equals(openPrefs)) {
             new PrefsDialog();
+        } else if (e.getSource().equals(editWord)) {
+
+            editSelectedWord();
+
         }
 
     }
