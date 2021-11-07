@@ -169,7 +169,6 @@ public class AppWindow extends JFrame implements ActionListener, KeyListener {
             statusText.setText(defineWords());
             centerTabbedPane.setSelectedIndex(1); // Switch to definitions tab
             this.setCursor(Cursor.getDefaultCursor()); // Remove loading cursor
-            defineButton.setText("Write to file");
 
         } else if (e.getSource().equals(removeButton)) {
 
@@ -216,7 +215,6 @@ public class AppWindow extends JFrame implements ActionListener, KeyListener {
                     if (jfc.getSelectedFile().exists()) {
                         Scanner scanner = new Scanner(jfc.getSelectedFile());
                         scanWith(scanner);
-                        defineButton.setText("Define");
                     }
                 } catch (Exception x) {
                     System.out.println("Failed to read file! Stack trace:");
