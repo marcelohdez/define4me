@@ -172,15 +172,19 @@ public class AppWindow extends JFrame implements ActionListener, KeyListener {
     }
 
     private void addWord(String word) {
-        wordsArray.add(word);
-        words.addElement(word);
-        defineButton.setEnabled(wordsArray.size() > 0);
+        if (!wordsArray.contains(word)) { // Avoid adding a duplicate
+            wordsArray.add(word);
+            words.addElement(word);
+            defineButton.setEnabled(wordsArray.size() > 0);
+        }
     }
 
     private void addWordAt(String word, int index) {
-        wordsArray.add(index, word);
-        words.add(index, word);
-        defineButton.setEnabled(wordsArray.size() > 0);
+        if (!wordsArray.contains(word)) { // Avoid adding a duplicate
+            wordsArray.add(index, word);
+            words.add(index, word);
+            defineButton.setEnabled(wordsArray.size() > 0);
+        }
     }
 
     @Override
