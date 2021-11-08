@@ -1,9 +1,9 @@
 package me.swiftsatchel.define4me.swing;
 
 import me.swiftsatchel.define4me.Main;
+import me.swiftsatchel.define4me.swing.comp.MiddlePane;
 import me.swiftsatchel.define4me.swing.dialog.AboutDialog;
 import me.swiftsatchel.define4me.swing.dialog.AddWordDialog;
-import me.swiftsatchel.define4me.swing.dialog.EditWordDialog;
 import me.swiftsatchel.define4me.swing.dialog.PrefsDialog;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -23,29 +23,14 @@ import java.awt.event.KeyListener;
 import java.io.*;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.Scanner;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class AppWindow extends JFrame implements ActionListener, KeyListener {
 
     private JFileChooser jfc; // Our file chooser instance
-    private final ArrayList<String> wordsArray = new ArrayList<>(); // Current list of words
     private final ConcurrentHashMap<String, String> definitions = new ConcurrentHashMap<>(); // Word definitions
 
-    // Main components
-    private final JButton chooseButton = new JButton("Choose file");
-    private final JButton defineButton = new JButton("Define");
-
-    private final JButton removeButton = new JButton("Remove");
-    private final JButton addButton = new JButton("Add");
-    private final DefaultListModel<String> words = new DefaultListModel<>();
-    private final JList<String> wordList = new JList<>(words);
-    private final JTextArea statusText = new JTextArea("""
-            No words have been defined yet.
-            """);
-
-    private final JTabbedPane centerTabbedPane = new JTabbedPane();
     // Menu bar stuffs: File menu
     private final JMenuBar menuBar = new JMenuBar();
     private final JMenu fileMenu = new JMenu("File");
@@ -54,6 +39,7 @@ public class AppWindow extends JFrame implements ActionListener, KeyListener {
     // Words menu
     private final JMenu wordsMenu = new JMenu("Words");
     private final JMenuItem pasteText = new JMenuItem("Paste Text");
+
     // Right click menus: Text area
     private final JPopupMenu rightClickMenu = new JPopupMenu();
     private final JMenuItem copyAllText = new JMenuItem("Copy All");
@@ -61,6 +47,11 @@ public class AppWindow extends JFrame implements ActionListener, KeyListener {
     // Words list
     private final JPopupMenu rightClickWords = new JPopupMenu();
     private final JMenuItem editWord = new JMenuItem("Edit");
+
+    // Main components
+    private final JButton chooseButton = new JButton("Choose file");
+    private final MiddlePane middlePane = new MiddlePane(this, rightClickWords, this); // Center tabbed pane
+    private final JButton defineButton = new JButton("Define");
 
     private int keyBeingPressed;
 
@@ -72,9 +63,7 @@ public class AppWindow extends JFrame implements ActionListener, KeyListener {
 
         setJMenuBar(menuBar);
         add(chooseButton, BorderLayout.WEST);
-        centerTabbedPane.addTab("Words", createListAndButtonsPanel());
-        centerTabbedPane.addTab("Definitions", new JScrollPane(statusText));
-        add(centerTabbedPane, BorderLayout.CENTER);
+        add(middlePane, BorderLayout.CENTER);
         add(defineButton, BorderLayout.EAST);
 
         initComps();
@@ -89,23 +78,6 @@ public class AppWindow extends JFrame implements ActionListener, KeyListener {
 
     }
 
-    private JPanel createListAndButtonsPanel() {
-
-        JPanel pnl = new JPanel();
-
-        pnl.setLayout(new BorderLayout());
-        pnl.add(new JScrollPane(wordList), BorderLayout.CENTER);
-
-        JPanel buttonPanel = new JPanel();
-        buttonPanel.add(addButton);
-        buttonPanel.add(removeButton);
-
-        pnl.add(buttonPanel, BorderLayout.SOUTH);
-
-        return pnl;
-
-    }
-
     // Initialize components
     private void initComps() {
 
@@ -116,28 +88,20 @@ public class AppWindow extends JFrame implements ActionListener, KeyListener {
         menuBar.add(wordsMenu);
 
         defineButton.setEnabled(false); // Disable define button until we have words to define
-        initButtons(chooseButton, defineButton, removeButton, addButton, openAbout, openPrefs,
-                pasteText, copyAllText, copySelectedText, editWord);
+        initButtons(chooseButton, defineButton, openAbout, openPrefs, pasteText, copyAllText, copySelectedText,
+                editWord);
 
-        statusText.setEditable(false);
-        statusText.setLineWrap(true);
-        statusText.setWrapStyleWord(true);
-        statusText.setComponentPopupMenu(rightClickMenu);
-
-        wordList.addKeyListener(this);
         rightClickWords.add(editWord);
-        wordList.setComponentPopupMenu(rightClickWords);
-
         rightClickMenu.add(copyAllText);
         rightClickMenu.add(copySelectedText);
 
     }
 
     /**
-     * Adds this as ActionLister and sets cursor to hand cursor on the given abstract buttons.
-     * @param buttons Buttons to add this as ActionListener and hand cursor on
+     * Initializes buttons with this as ActionListener and KeyListener then gives them a hand cursor button
+     * @param buttons Buttons to initialize
      */
-    private void initButtons(AbstractButton... buttons) {
+    public void initButtons(AbstractButton... buttons) {
         for (AbstractButton b : buttons) {
             b.addActionListener(this);
             b.addKeyListener(this);
@@ -146,45 +110,13 @@ public class AppWindow extends JFrame implements ActionListener, KeyListener {
     }
 
     private void removeSelectedWord() {
-
-        if (!wordList.isSelectionEmpty()) {
-            int index = wordList.getSelectedIndex();
-            wordsArray.remove(index);
-            words.remove(index);
-            wordList.setSelectedIndex(index - 1); // Keep selection on one index below
-            defineButton.setEnabled(wordsArray.size() > 0);
-        }
-
-    }
-
-    private void editSelectedWord() {
-
-        if (!wordList.isSelectionEmpty()) {
-            int index = wordList.getSelectedIndex();
-            EditWordDialog ewd = new EditWordDialog(words.get(index));
-            if (ewd.accepted()) {
-                removeSelectedWord();
-                addWordAt(ewd.getWord(), index);
-            }
-            ewd.dispose();
-        }
-
+        if (middlePane.removeSelectedWord())
+            defineButton.setEnabled(middlePane.getWordsSize() > 0);
     }
 
     private void addWord(String word) {
-        if (!wordsArray.contains(word)) { // Avoid adding a duplicate
-            wordsArray.add(word);
-            words.addElement(word);
-            defineButton.setEnabled(wordsArray.size() > 0);
-        }
-    }
-
-    private void addWordAt(String word, int index) {
-        if (!wordsArray.contains(word)) { // Avoid adding a duplicate
-            wordsArray.add(index, word);
-            words.add(index, word);
-            defineButton.setEnabled(wordsArray.size() > 0);
-        }
+        if (middlePane.addWord(word))
+            defineButton.setEnabled(middlePane.getWordsSize() > 0);
     }
 
     @Override
@@ -197,15 +129,15 @@ public class AppWindow extends JFrame implements ActionListener, KeyListener {
         } else if (e.getSource().equals(defineButton)) {
 
             this.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR)); // Set loading cursor
-            statusText.setText(defineWords());
-            centerTabbedPane.setSelectedIndex(1); // Switch to definitions tab
+            middlePane.setStatusText(defineWords());
+            middlePane.setSelectedIndex(1); // Switch to definitions tab
             this.setCursor(Cursor.getDefaultCursor()); // Remove loading cursor
 
-        } else if (e.getSource().equals(removeButton)) {
+        } else if (e.getSource().equals(middlePane.getRemoveButton())) {
 
             removeSelectedWord();
 
-        } else if (e.getSource().equals(addButton)) {
+        } else if (e.getSource().equals(middlePane.getAddButton())) {
 
             AddWordDialog awd = new AddWordDialog();
             if (awd.accepted()) addWord(awd.getWord());
@@ -213,11 +145,11 @@ public class AppWindow extends JFrame implements ActionListener, KeyListener {
 
         } else if (e.getSource().equals(copyAllText)) {
 
-            copy(new StringSelection(statusText.getText()));
+            copy(new StringSelection(middlePane.getStatusText()));
 
         } else if (e.getSource().equals(copySelectedText)) {
 
-            copy(new StringSelection(statusText.getSelectedText()));
+            copy(new StringSelection(middlePane.getSelectedStatusText()));
 
         } else if (e.getSource().equals(pasteText)) {
 
@@ -229,7 +161,7 @@ public class AppWindow extends JFrame implements ActionListener, KeyListener {
             new PrefsDialog();
         } else if (e.getSource().equals(editWord)) {
 
-            editSelectedWord();
+            middlePane.editSelectedWord();
 
         }
 
@@ -263,8 +195,7 @@ public class AppWindow extends JFrame implements ActionListener, KeyListener {
      */
     private void getWordsFrom(Scanner reader) {
 
-        wordsArray.clear(); // Clear list
-        words.clear();
+        middlePane.clear();
         StringBuilder wordBuilder;
 
         while (reader.hasNextLine()) {
@@ -303,21 +234,21 @@ public class AppWindow extends JFrame implements ActionListener, KeyListener {
         // create a thread pool the size of how many we will use, ideally one per word, but if that's more than
         // the amount of cores available then stop at that number. (also 16 is ConcurrentHashMap's concurrent limit)
         Thread[] threadList = new Thread[
-                Math.min(Runtime.getRuntime().availableProcessors(), Math.min(wordsArray.size(), 16)) ];
+                Math.min(Runtime.getRuntime().availableProcessors(), Math.min(middlePane.getWordsSize(), 16)) ];
 
         for (int i = 0; i < threadList.length; i++) { // Create a new thread for every open spot in threadList
             int threadNumber = i; // Local value to pass to thread's for loop.
 
             threadList[i] = new Thread(() -> {
-                for (int w = threadNumber; w < wordsArray.size(); w++) { // Start on our thread number, and get words 1 by 1
-                    if (!definitions.containsKey(wordsArray.get(w))) { // If the current word has not been defined yet
+                for (int w = threadNumber; w < middlePane.getWordsSize(); w++) { // Start on our thread number, and get words 1 by 1
+                    if (!definitions.containsKey(middlePane.getWordAt(w))) { // If the current word has not been defined yet
                         // Default text + creating the key stops other threads from trying to define it as well.
-                        definitions.put(wordsArray.get(w), "No definition found");
+                        definitions.put(middlePane.getWordAt(w), "No definition found");
                         try {
-                            getDefinitionOf(wordsArray.get(w));
+                            getDefinitionOf(middlePane.getWordAt(w));
                         } catch (Exception e) {
                             System.out.println("Couldn't find a definition for $w!"
-                                    .replace("$w", wordsArray.get(w)));
+                                    .replace("$w", middlePane.getWordAt(w)));
                         }
                     }
                 }
@@ -335,7 +266,7 @@ public class AppWindow extends JFrame implements ActionListener, KeyListener {
         }
 
         StringBuilder sb = new StringBuilder();
-        for (String word : wordsArray) { // Append all definitions to separate lines
+        for (String word : middlePane.getList()) { // Append all definitions to separate lines
             sb.append(word).append(" - ").append(definitions.get(word)).append("\n");
         }
 
@@ -376,7 +307,7 @@ public class AppWindow extends JFrame implements ActionListener, KeyListener {
         try {
             String pastedText = (String) Toolkit.getDefaultToolkit().getSystemClipboard().getData(DataFlavor.stringFlavor);
             getWordsFrom(new Scanner(pastedText));
-            centerTabbedPane.setSelectedIndex(0); // Switch back to words tab
+            middlePane.setSelectedIndex(0); // Switch back to words tab
         } catch (IOException | UnsupportedFlavorException ex) {
             System.out.println("Unable to paste from clipboard! Stack trace:");
             ex.printStackTrace();
@@ -396,7 +327,7 @@ public class AppWindow extends JFrame implements ActionListener, KeyListener {
             }
             case KeyEvent.VK_C -> {
                 if (keyBeingPressed == KeyEvent.VK_CONTROL || keyBeingPressed == KeyEvent.VK_META)
-                    copy(new StringSelection(statusText.getText()));
+                    copy(new StringSelection(middlePane.getStatusText()));
             }
             case KeyEvent.VK_BACK_SPACE -> removeSelectedWord();
         }
