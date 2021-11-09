@@ -6,8 +6,10 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 
-public class AddWordDialog extends JDialog implements ActionListener {
+public class AddWordDialog extends JDialog implements ActionListener, KeyListener {
 
     private boolean accepted = false;
 
@@ -24,6 +26,7 @@ public class AddWordDialog extends JDialog implements ActionListener {
         JButton cancelButton = new JButton("Cancel");
         JPanel buttonRow = new JPanel();
 
+        textField.addKeyListener(this);
         acceptButton.addActionListener(this);
         cancelButton.addActionListener(this);
 
@@ -46,29 +49,39 @@ public class AddWordDialog extends JDialog implements ActionListener {
         return textField.getText();
     }
 
+    private void acceptWord() {
+
+        boolean allowed = true;
+        for (int i = 0; i < textField.getText().length(); i++) { // Make sure all characters are allowed
+            if (! (Main.ACCEPTED.contains(textField.getText().substring(i, i+1).toLowerCase()))) {
+                allowed = false;
+            }
+        }
+
+        if (allowed && !textField.getText().isBlank()) { // If all characters passed check and word is not blank
+            accepted = true;
+            setVisible(false);
+        }
+
+    }
+
     @Override
     public void actionPerformed(ActionEvent e) {
 
         if (e.getSource().equals(acceptButton)) {
-
-            boolean allowed = true;
-            for (int i = 0; i < textField.getText().length(); i++) { // Make sure all characters are allowed
-                if (! (Main.ACCEPTED.contains(textField.getText().substring(i, i+1).toLowerCase()))) {
-                    allowed = false;
-                }
-            }
-
-            if (allowed && !textField.getText().isBlank()) { // If all characters passed check and word is not blank
-                accepted = true;
-                setVisible(false);
-            }
-
-        } else {
-
-            setVisible(false);
-
-        }
+            acceptWord();
+        } else setVisible(false);
 
     }
+
+    @Override
+    public void keyPressed(KeyEvent e) {
+        if (e.getKeyCode() == KeyEvent.VK_ENTER) acceptWord();
+    }
+
+    @Override
+    public void keyTyped(KeyEvent e) {}
+    @Override
+    public void keyReleased(KeyEvent e) {}
 
 }
