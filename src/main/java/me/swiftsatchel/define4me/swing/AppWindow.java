@@ -111,7 +111,7 @@ public class AppWindow extends JFrame implements ActionListener, KeyListener {
     }
 
     private void removeSelectedWord() {
-        if (middlePane.removeSelectedWord())
+        if (middlePane.removeSelectedWord(true))
             defineButton.setEnabled(middlePane.getWordsSize() > 0);
     }
 

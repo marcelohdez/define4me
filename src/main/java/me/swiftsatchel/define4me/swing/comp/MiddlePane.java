@@ -78,14 +78,14 @@ public class MiddlePane extends JTabbedPane {
         return wordsArray.toArray(new String[0]);
     }
 
-    public boolean removeSelectedWord() {
+    public boolean removeSelectedWord(boolean reselect) {
 
         if (!wordList.isSelectionEmpty()) {
 
             int index = wordList.getSelectedIndex();
             wordsArray.remove(index);
             words.remove(index);
-            wordList.setSelectedIndex(index - 1); // Keep selection on one index below
+            if (reselect) wordList.setSelectedIndex(index - 1); // Keep selection on one index below
             return true;
 
         } else return false;
@@ -93,23 +93,18 @@ public class MiddlePane extends JTabbedPane {
     }
 
     public boolean addWord(String word) {
-
         if (!wordsArray.contains(word)) { // Avoid adding a duplicate
             wordsArray.add(word);
             words.addElement(word);
             return true;
         } else return false;
-
     }
 
-    public boolean addAt(int i, String word) {
-
+    public void addAt(int i, String word) {
         if (!wordsArray.contains(word)) { // Avoid adding a duplicate
             wordsArray.add(i, word);
             words.add(i, word);
-            return true;
-        } else return false;
-
+        }
     }
 
     public void editSelectedWord() {
@@ -118,8 +113,9 @@ public class MiddlePane extends JTabbedPane {
             int index = wordList.getSelectedIndex();
             EditWordDialog ewd = new EditWordDialog(words.get(index));
             if (ewd.accepted()) {
-                removeSelectedWord();
+                removeSelectedWord(false);
                 addAt(index, ewd.getWord());
+                wordList.setSelectedIndex(index);
             }
             ewd.dispose();
         }
