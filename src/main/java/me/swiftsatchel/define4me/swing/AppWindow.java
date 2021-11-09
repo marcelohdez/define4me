@@ -4,6 +4,7 @@ import me.swiftsatchel.define4me.Main;
 import me.swiftsatchel.define4me.swing.comp.MiddlePane;
 import me.swiftsatchel.define4me.swing.dialog.AboutDialog;
 import me.swiftsatchel.define4me.swing.dialog.AddWordDialog;
+import me.swiftsatchel.define4me.swing.dialog.AcceptDialog;
 import me.swiftsatchel.define4me.swing.dialog.PrefsDialog;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -195,7 +196,14 @@ public class AppWindow extends JFrame implements ActionListener, KeyListener {
      */
     private void getWordsFrom(Scanner reader) {
 
-        middlePane.clear();
+        if (middlePane.getWordsSize() > 0)
+            if (new AcceptDialog("""
+                    Would you like to clear your
+                    current list of words or add
+                    to them?""", "Clear", "Add")
+                    .accepted())
+                middlePane.clear();
+
         StringBuilder wordBuilder;
 
         while (reader.hasNextLine()) {
