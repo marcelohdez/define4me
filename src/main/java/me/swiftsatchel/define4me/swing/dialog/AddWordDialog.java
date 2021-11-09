@@ -51,15 +51,21 @@ public class AddWordDialog extends JDialog implements ActionListener, KeyListene
 
     private void acceptWord() {
 
-        boolean allowed = true;
-        for (int i = 0; i < textField.getText().length(); i++) { // Make sure all characters are allowed
-            if (! (Main.ACCEPTED.contains(textField.getText().substring(i, i+1).toLowerCase()))) {
-                allowed = false;
+        int firstLetter = -1; // Used to get rid of extra white space at start (ex: "   hello")
+        for (int i = 0; i < textField.getText().length(); i++)
+            if (!textField.getText().substring(i, i + 1).isBlank()) {
+                firstLetter = i;
+                break;
             }
-        }
+
+        boolean allowed = true;
+        for (int i = firstLetter; i < textField.getText().length(); i++) // Make sure all characters are allowed
+            if (!(Main.ACCEPTED.contains(textField.getText().substring(i, i+1).toLowerCase())))
+                allowed = false;
 
         if (allowed && !textField.getText().isBlank()) { // If all characters passed check and word is not blank
             accepted = true;
+            textField.setText(textField.getText().substring(firstLetter));
             setVisible(false);
         }
 

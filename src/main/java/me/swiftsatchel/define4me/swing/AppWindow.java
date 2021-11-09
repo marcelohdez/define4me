@@ -209,25 +209,21 @@ public class AppWindow extends JFrame implements ActionListener, KeyListener {
         while (reader.hasNextLine()) {
 
             wordBuilder = new StringBuilder();
-            String nextLine = reader.nextLine(); // Store next line in string
+            String line = reader.nextLine(); // Store next line in string
 
-            boolean hasReachedLetter = false; // Used to get rid of extra white space at start (ex: "   hello")
-            for (int i = 0; i < nextLine.length(); i++) {  // Go through every character in string
-                // If we reached a letter hasReachedLetter is true
-                if (!nextLine.substring(i, i+1).isBlank()) {
-                    hasReachedLetter = true;
-                } else { // else if we are at a blank and haven't reached a letter before, move on to next character
-                    if (!hasReachedLetter) break;
+            int firstLetter = -1; // Used to get rid of extra white space at start (ex: "   hello")
+            for (int i = 0; i < line.length(); i++)
+                if (!line.substring(i, i+1).isBlank()) {
+                    firstLetter = i;
+                    break;
                 }
 
-                // Check if it is accepted
-                if (Main.ACCEPTED.contains(nextLine.substring(i, i+1).toLowerCase())) {
-                    if (nextLine.startsWith(" -", i)) { // If current and next character is " -"
-                        break; // Go to next line, for lists written with hyphens after words
-                    }
-                    wordBuilder.append(nextLine.charAt(i));
+            for (int i = firstLetter; i < line.length(); i++) // Add every accepted character
+                if (Main.ACCEPTED.contains(line.substring(i, i+1).toLowerCase())) {
+                    // If current and next character is " -" go to next line, for text with hyphens after words
+                    if (line.startsWith(" -", i)) break;
+                    wordBuilder.append(line.charAt(i)); // Else add the current character
                 }
-            }
 
             String word = wordBuilder.toString();
             if (!word.isBlank()) addWord(word); // If word si not blank then add it
