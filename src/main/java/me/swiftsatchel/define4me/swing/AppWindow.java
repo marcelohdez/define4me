@@ -42,7 +42,7 @@ public class AppWindow extends JFrame implements ActionListener, KeyListener {
     private final JMenuItem pasteText = new JMenuItem("Paste Text");
 
     // Right click menus: Text area
-    private final JPopupMenu rightClickMenu = new JPopupMenu();
+    private final JPopupMenu rightClickText = new JPopupMenu();
     private final JMenuItem copyAllText = new JMenuItem("Copy All");
     private final JMenuItem copySelectedText = new JMenuItem("Copy Selected");
     // Words list
@@ -51,7 +51,7 @@ public class AppWindow extends JFrame implements ActionListener, KeyListener {
 
     // Main components
     private final JButton chooseButton = new JButton("Choose file");
-    private final MiddlePane middlePane = new MiddlePane(this, rightClickWords, this); // Center tabbed pane
+    private final MiddlePane middlePane = new MiddlePane(this, rightClickWords, rightClickText, this); // Center tabbed pane
     private final JButton defineButton = new JButton("Define");
 
     private int keyBeingPressed;
@@ -70,8 +70,7 @@ public class AppWindow extends JFrame implements ActionListener, KeyListener {
         initComps();
 
         pack();
-        setMinimumSize(getSize());
-        setSize(new Dimension((int) (getWidth()*1.2), (int) (getHeight()*1.2)));
+        setMinimumSize(new Dimension((int) (getWidth()*1.2), (int) (getHeight()*1.2)));
         setLocationRelativeTo(null); // Center on main screen
         setVisible(true);
 
@@ -93,8 +92,8 @@ public class AppWindow extends JFrame implements ActionListener, KeyListener {
                 editWord);
 
         rightClickWords.add(editWord);
-        rightClickMenu.add(copyAllText);
-        rightClickMenu.add(copySelectedText);
+        rightClickText.add(copyAllText);
+        rightClickText.add(copySelectedText);
 
     }
 

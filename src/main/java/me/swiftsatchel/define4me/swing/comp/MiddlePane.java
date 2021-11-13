@@ -20,22 +20,26 @@ public class MiddlePane extends JTabbedPane {
             No words have been defined yet.
             """);
 
-    public MiddlePane(AppWindow app, JPopupMenu rightClickMenu, KeyListener kl) {
+    public MiddlePane(AppWindow app, JPopupMenu wordsMenu, JPopupMenu textMenu,
+                      KeyListener kl) {
         addTab("Words", createListAndButtonsPanel());
         addTab("Definitions", new JScrollPane(statusText));
 
-        initComps(app, rightClickMenu, kl);
+        initComps(app, wordsMenu, textMenu, kl);
     }
 
-    private void initComps(AppWindow app, JPopupMenu rightClickMenu, KeyListener kl) {
+    private void initComps(AppWindow app, JPopupMenu wordsMenu, JPopupMenu textMenu, KeyListener kl) {
 
         statusText.setEditable(false);
         statusText.setLineWrap(true);
         statusText.setWrapStyleWord(true);
-        statusText.setComponentPopupMenu(rightClickMenu);
+        statusText.setComponentPopupMenu(wordsMenu);
 
         wordList.addKeyListener(kl);
-        wordList.setComponentPopupMenu(rightClickMenu);
+        wordList.setComponentPopupMenu(wordsMenu);
+
+        statusText.addKeyListener(kl);
+        statusText.setComponentPopupMenu(textMenu);
 
         app.initButtons(addButton, removeButton);
 
