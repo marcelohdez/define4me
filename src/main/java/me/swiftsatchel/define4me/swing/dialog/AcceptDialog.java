@@ -14,7 +14,7 @@ public class AcceptDialog extends JDialog implements ActionListener {
     public AcceptDialog(String text, String acceptButtonText, String cancelButtonText) {
 
         setTitle("Alert");
-        setDefaultCloseOperation(DISPOSE_ON_CLOSE);
+        setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
         setModalityType(ModalityType.APPLICATION_MODAL);
         setResizable(false);
 

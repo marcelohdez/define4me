@@ -19,7 +19,7 @@ public class AddWordDialog extends JDialog implements ActionListener, KeyListene
     public AddWordDialog() {
 
         setTitle("Add Word");
-        setDefaultCloseOperation(DISPOSE_ON_CLOSE);
+        setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
         setModalityType(ModalityType.APPLICATION_MODAL);
         setResizable(false);
 
