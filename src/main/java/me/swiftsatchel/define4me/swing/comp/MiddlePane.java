@@ -130,11 +130,11 @@ public class MiddlePane extends JTabbedPane {
         statusText.setText(t);
     }
 
-    public String getStatusText() {
+    public String getText() {
         return statusText.getText();
     }
 
-    public String getSelectedStatusText() {
+    public String getSelectedText() {
         return statusText.getSelectedText();
     }
 

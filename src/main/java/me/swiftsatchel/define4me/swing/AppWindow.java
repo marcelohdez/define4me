@@ -38,8 +38,7 @@ public class AppWindow extends JFrame implements KeyListener {
 
     // Right click menus: Text area
     private final JPopupMenu rightClickText = new JPopupMenu();
-    private final JMenuItem copyAllText = new JMenuItem("Copy All");
-    private final JMenuItem copySelectedText = new JMenuItem("Copy Selected");
+    private final JMenuItem copyText = new JMenuItem("Copy");
     // Words list
     private final JPopupMenu rightClickWords = new JPopupMenu();
     private final JMenuItem editWord = new JMenuItem("Edit Selected");
@@ -73,8 +72,7 @@ public class AppWindow extends JFrame implements KeyListener {
     // Initialize components
     private void initComps() {
 
-        copyAllText.addActionListener((e) -> copy(new StringSelection(middlePane.getStatusText())));
-        copySelectedText.addActionListener((e) -> copy(new StringSelection(middlePane.getSelectedStatusText())));
+        copyText.addActionListener((e) -> copy());
         pasteFromMenuBar.addActionListener((e) -> paste());
         pasteFromWordList.addActionListener((e) -> paste());
         openAbout.addActionListener((e) -> new AboutDialog());
@@ -95,7 +93,7 @@ public class AppWindow extends JFrame implements KeyListener {
         });
 
         defineButton.setEnabled(false); // Disable define button until we have words to define
-        initButtons(defineButton, openAbout, openPrefs, pasteFromMenuBar, copyAllText, copySelectedText, editWord,
+        initButtons(defineButton, openAbout, openPrefs, pasteFromMenuBar, copyText, editWord,
                 pasteFromWordList);
 
         fileMenu.add(openAbout);
@@ -105,8 +103,7 @@ public class AppWindow extends JFrame implements KeyListener {
         menuBar.add(wordsMenu);
         rightClickWords.add(editWord);
         rightClickWords.add(pasteFromWordList);
-        rightClickText.add(copyAllText);
-        rightClickText.add(copySelectedText);
+        rightClickText.add(copyText);
 
     }
 
@@ -269,7 +266,14 @@ public class AppWindow extends JFrame implements KeyListener {
         }
     }
 
-    private void copy(StringSelection text) {
+    private void copy() {
+        StringSelection text;
+        if (middlePane.getSelectedText() != null) { // If there is something selected get that text:
+            text = new StringSelection(middlePane.getSelectedText());
+        } else {    // Else just get the whole text area's contents
+            text = new StringSelection(middlePane.getText());
+        }
+
         Toolkit.getDefaultToolkit().getSystemClipboard().setContents(text, text);
     }
 
@@ -279,7 +283,7 @@ public class AppWindow extends JFrame implements KeyListener {
         if (keyBeingPressed == KeyEvent.VK_CONTROL || keyBeingPressed == KeyEvent.VK_META) {
             switch (e.getKeyCode()) {
                 case KeyEvent.VK_V -> paste();
-                case KeyEvent.VK_C -> copy(new StringSelection(middlePane.getStatusText()));
+                case KeyEvent.VK_C -> copy();
             }
         } else // Else check for individual key shortcuts:
             if (e.getKeyCode() == KeyEvent.VK_BACK_SPACE) removeSelectedWord();
