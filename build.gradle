@@ -5,15 +5,15 @@ plugins {
 group 'me.swiftsatchel'
 version '1.0-DEV'
 
-sourceCompatibility = JavaVersion.VERSION_16
-targetCompatibility = JavaVersion.VERSION_16
+sourceCompatibility = JavaVersion.VERSION_17
+targetCompatibility = JavaVersion.VERSION_17
 
 repositories {
     mavenCentral()
 }
 
 configurations {
-    // Used to get dependencies included in jar. Gotten from Nikecrow: https://discuss.gradle.org/t/how-to-include-dependencies-in-jar/19571
+    // Used to include dependencies in jar. From Nikecrow: https://discuss.gradle.org/t/how-to-include-dependencies-in-jar/19571
     extraLibs
 }
 
