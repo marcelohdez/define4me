@@ -6,7 +6,7 @@ public final class Settings {
 
     private static final Preferences PREFS = Preferences.userRoot(); // User's preferences
 
-    public static boolean isFirstDefinitionPreferred() {
+    public static boolean prefersFirstDefinition() {
         // Setting to ask for a choice if there's multiple definitions available for a word
         return PREFS.getBoolean("preferFirstDefinition", true);
     }
@@ -15,7 +15,7 @@ public final class Settings {
         PREFS.putBoolean("preferFirstDefinition", preference);
     }
 
-    public static boolean isFirstGrammarPreferred() {
+    public static boolean prefersFirstGrammar() {
         return PREFS.getBoolean("preferFirstGrammar", true);
     }
 

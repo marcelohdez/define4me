@@ -24,6 +24,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class AppWindow extends JFrame implements KeyListener {
 
+    private DefinitionsDialog definitionsDlg;
     private final ConcurrentHashMap<String, String> definitions = new ConcurrentHashMap<>(); // Word definitions
 
     // Menu bar stuffs: File menu
@@ -175,6 +176,7 @@ public class AppWindow extends JFrame implements KeyListener {
     private String defineWords() {
 
         definitions.clear(); // Reset definitions
+        if (!Settings.prefersFirstDefinition()) definitionsDlg = new DefinitionsDialog();
 
         // create a thread pool the size of how many we will use, ideally one per word, but if that's more than
         // the amount of cores available then stop at that number. (also 16 is ConcurrentHashMap's concurrent limit)
@@ -187,7 +189,7 @@ public class AppWindow extends JFrame implements KeyListener {
             threadList[i] = new Thread(() -> {
                 for (int w = threadNumber; w < middlePane.getWordsSize(); w++) { // Start on our thread number, and get words 1 by 1
                     if (!definitions.containsKey(middlePane.getWordAt(w))) { // If the current word has not been defined yet
-                        // Default text + creating the key stops other threads from trying to define it as well.
+                        // Default text + having a key marks this word as defined to other threads
                         definitions.put(middlePane.getWordAt(w), "No definition found");
                         try {
                             getDefinitionOf(middlePane.getWordAt(w));
@@ -209,6 +211,9 @@ public class AppWindow extends JFrame implements KeyListener {
                 e.printStackTrace();
             }
         }
+
+        if (!Settings.prefersFirstDefinition()) // If enabled and having words to choose for, show dialog to select definitions:
+            if (definitionsDlg.wordsToShow() > 0) definitions.putAll(definitionsDlg.getWantedDefinitions());
 
         StringBuilder sb = new StringBuilder();
         for (String word : middlePane.getList()) { // Append all definitions to separate lines
@@ -242,9 +247,14 @@ public class AppWindow extends JFrame implements KeyListener {
         jsonArray = (JSONArray) jsonObject.get("meanings");     // Get array of "meanings"
         jsonObject = (JSONObject) jsonArray.get(0);             // Get first object of "meaning"
         jsonArray = (JSONArray) jsonObject.get("definitions");  // Get array of definitions
-        jsonObject = (JSONObject) jsonArray.get(0);             // Get first definition object
 
-        definitions.put(word, jsonObject.get("definition").toString());
+        // If user prefers to choose between multiple definitions:
+        if (!Settings.prefersFirstDefinition() && jsonArray.size() > 1) {
+            definitionsDlg.addDefinitionArrayFor(word, jsonArray); // Add this word and its definitions to definitionsDlg
+        } else { // Else select first:
+            jsonObject = (JSONObject) jsonArray.get(0);         // Get first definition object
+            definitions.put(word, jsonObject.get("definition").toString()); // Add to definitions
+        }
 
     }
 

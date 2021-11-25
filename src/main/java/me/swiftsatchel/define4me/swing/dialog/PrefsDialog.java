@@ -41,11 +41,11 @@ public class PrefsDialog extends JDialog implements WindowListener {
     private void initComps() {
 
         // Definition choice
-        preferFirstDefinition.setSelected(Settings.isFirstDefinitionPreferred());
+        preferFirstDefinition.setSelected(Settings.prefersFirstDefinition());
         preferToAskDefinition.setSelected(!preferFirstDefinition.isSelected());
 
         // Grammar preference
-        preferFirstGrammar.setSelected(Settings.isFirstGrammarPreferred());
+        preferFirstGrammar.setSelected(Settings.prefersFirstGrammar());
         preferToAskGrammar.setSelected(!preferFirstGrammar.isSelected());
 
     }
