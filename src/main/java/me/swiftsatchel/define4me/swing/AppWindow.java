@@ -33,7 +33,7 @@ public class AppWindow extends JFrame implements KeyListener {
     private final JMenuItem openPrefs = new JMenuItem("Preferences");
     // Words menu
     private final JMenu wordsMenu = new JMenu("Words");
-    private final JMenuItem pasteText = new JMenuItem("Paste Text");
+    private final JMenuItem pasteFromMenuBar = new JMenuItem("Paste");
 
     // Right click menus: Text area
     private final JPopupMenu rightClickText = new JPopupMenu();
@@ -41,7 +41,8 @@ public class AppWindow extends JFrame implements KeyListener {
     private final JMenuItem copySelectedText = new JMenuItem("Copy Selected");
     // Words list
     private final JPopupMenu rightClickWords = new JPopupMenu();
-    private final JMenuItem editWord = new JMenuItem("Edit");
+    private final JMenuItem editWord = new JMenuItem("Edit Selected");
+    private final JMenuItem pasteFromWordList = new JMenuItem("Paste");
 
     // Main components
     private final MiddlePane middlePane = new MiddlePane(this, rightClickWords, rightClickText, this); // Center tabbed pane
@@ -73,7 +74,8 @@ public class AppWindow extends JFrame implements KeyListener {
 
         copyAllText.addActionListener((e) -> copy(new StringSelection(middlePane.getStatusText())));
         copySelectedText.addActionListener((e) -> copy(new StringSelection(middlePane.getSelectedStatusText())));
-        pasteText.addActionListener((e) -> paste());
+        pasteFromMenuBar.addActionListener((e) -> paste());
+        pasteFromWordList.addActionListener((e) -> paste());
         openAbout.addActionListener((e) -> new AboutDialog());
         openPrefs.addActionListener((e) -> new PrefsDialog());
         editWord.addActionListener((e) -> middlePane.editSelectedWord());
@@ -92,14 +94,16 @@ public class AppWindow extends JFrame implements KeyListener {
         });
 
         defineButton.setEnabled(false); // Disable define button until we have words to define
-        initButtons(defineButton, openAbout, openPrefs, pasteText, copyAllText, copySelectedText, editWord);
+        initButtons(defineButton, openAbout, openPrefs, pasteFromMenuBar, copyAllText, copySelectedText, editWord,
+                pasteFromWordList);
 
         fileMenu.add(openAbout);
         fileMenu.add(openPrefs);
-        wordsMenu.add(pasteText);
+        wordsMenu.add(pasteFromMenuBar);
         menuBar.add(fileMenu);
         menuBar.add(wordsMenu);
         rightClickWords.add(editWord);
+        rightClickWords.add(pasteFromWordList);
         rightClickText.add(copyAllText);
         rightClickText.add(copySelectedText);
 
