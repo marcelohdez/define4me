@@ -2,23 +2,18 @@ package me.swiftsatchel.define4me.swing;
 
 import me.swiftsatchel.define4me.Main;
 import me.swiftsatchel.define4me.swing.comp.MiddlePane;
-import me.swiftsatchel.define4me.swing.dialog.AboutDialog;
-import me.swiftsatchel.define4me.swing.dialog.AddWordDialog;
-import me.swiftsatchel.define4me.swing.dialog.AcceptDialog;
-import me.swiftsatchel.define4me.swing.dialog.PrefsDialog;
+import me.swiftsatchel.define4me.swing.dialog.*;
+import me.swiftsatchel.define4me.util.Settings;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
 import javax.swing.*;
-import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.StringSelection;
 import java.awt.datatransfer.UnsupportedFlavorException;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.io.*;
@@ -27,9 +22,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.Scanner;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class AppWindow extends JFrame implements ActionListener, KeyListener {
+public class AppWindow extends JFrame implements KeyListener {
 
-    private JFileChooser jfc; // Our file chooser instance
     private final ConcurrentHashMap<String, String> definitions = new ConcurrentHashMap<>(); // Word definitions
 
     // Menu bar stuffs: File menu
@@ -50,11 +44,10 @@ public class AppWindow extends JFrame implements ActionListener, KeyListener {
     private final JMenuItem editWord = new JMenuItem("Edit");
 
     // Main components
-    private final JButton chooseButton = new JButton("Choose file");
     private final MiddlePane middlePane = new MiddlePane(this, rightClickWords, rightClickText, this); // Center tabbed pane
     private final JButton defineButton = new JButton("Define");
 
-    private int keyBeingPressed;
+    private int keyBeingPressed; // Keep track of key being pressed, for ctrl/cmd + (something) shortcuts
 
     public AppWindow() {
 
@@ -63,34 +56,49 @@ public class AppWindow extends JFrame implements ActionListener, KeyListener {
         addKeyListener(this);
 
         setJMenuBar(menuBar);
-        add(chooseButton, BorderLayout.WEST);
         add(middlePane, BorderLayout.CENTER);
         add(defineButton, BorderLayout.EAST);
 
         initComps();
 
         pack();
-        setMinimumSize(new Dimension((int) (getWidth()*1.2), (int) (getHeight()*1.2)));
+        setMinimumSize(new Dimension((int) (getWidth() * 1.2), (int) (getHeight() * 1.2)));
         setLocationRelativeTo(null); // Center on main screen
         setVisible(true);
-
-        SwingUtilities.invokeLater(() -> jfc = new JFileChooser()); // Create file chooser after window's shown.
 
     }
 
     // Initialize components
     private void initComps() {
 
+        copyAllText.addActionListener((e) -> copy(new StringSelection(middlePane.getStatusText())));
+        copySelectedText.addActionListener((e) -> copy(new StringSelection(middlePane.getSelectedStatusText())));
+        pasteText.addActionListener((e) -> paste());
+        openAbout.addActionListener((e) -> new AboutDialog());
+        openPrefs.addActionListener((e) -> new PrefsDialog());
+        editWord.addActionListener((e) -> middlePane.editSelectedWord());
+        middlePane.getRemoveButton().addActionListener((e) -> removeSelectedWord());
+
+        middlePane.getAddButton().addActionListener((e -> {
+            AddWordDialog awd = new AddWordDialog();
+            if (awd.accepted()) addWord(awd.getWord());
+            awd.dispose();
+        }));
+        defineButton.addActionListener((e) -> {
+            this.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR)); // Set loading cursor
+            middlePane.setStatusText(defineWords());
+            middlePane.setSelectedIndex(1); // Switch to definitions tab
+            this.setCursor(Cursor.getDefaultCursor()); // Remove loading cursor
+        });
+
+        defineButton.setEnabled(false); // Disable define button until we have words to define
+        initButtons(defineButton, openAbout, openPrefs, pasteText, copyAllText, copySelectedText, editWord);
+
         fileMenu.add(openAbout);
         fileMenu.add(openPrefs);
         wordsMenu.add(pasteText);
         menuBar.add(fileMenu);
         menuBar.add(wordsMenu);
-
-        defineButton.setEnabled(false); // Disable define button until we have words to define
-        initButtons(chooseButton, defineButton, openAbout, openPrefs, pasteText, copyAllText, copySelectedText,
-                editWord);
-
         rightClickWords.add(editWord);
         rightClickText.add(copyAllText);
         rightClickText.add(copySelectedText);
@@ -98,12 +106,11 @@ public class AppWindow extends JFrame implements ActionListener, KeyListener {
     }
 
     /**
-     * Initializes buttons with this as ActionListener and KeyListener then gives them a hand cursor button
+     * Initializes buttons with this as KeyListener then gives them a hand cursor button
      * @param buttons Buttons to initialize
      */
     public void initButtons(AbstractButton... buttons) {
         for (AbstractButton b : buttons) {
-            b.addActionListener(this);
             b.addKeyListener(this);
             b.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         }
@@ -117,75 +124,6 @@ public class AppWindow extends JFrame implements ActionListener, KeyListener {
     private void addWord(String word) {
         if (middlePane.addWord(word))
             defineButton.setEnabled(middlePane.getWordsSize() > 0);
-    }
-
-    @Override
-    public void actionPerformed(ActionEvent e) {
-
-        if (e.getSource().equals(chooseButton)) {
-
-            chooseFile();
-
-        } else if (e.getSource().equals(defineButton)) {
-
-            this.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR)); // Set loading cursor
-            middlePane.setStatusText(defineWords());
-            middlePane.setSelectedIndex(1); // Switch to definitions tab
-            this.setCursor(Cursor.getDefaultCursor()); // Remove loading cursor
-
-        } else if (e.getSource().equals(middlePane.getRemoveButton())) {
-
-            removeSelectedWord();
-
-        } else if (e.getSource().equals(middlePane.getAddButton())) {
-
-            AddWordDialog awd = new AddWordDialog();
-            if (awd.accepted()) addWord(awd.getWord());
-            awd.dispose();
-
-        } else if (e.getSource().equals(copyAllText)) {
-
-            copy(new StringSelection(middlePane.getStatusText()));
-
-        } else if (e.getSource().equals(copySelectedText)) {
-
-            copy(new StringSelection(middlePane.getSelectedStatusText()));
-
-        } else if (e.getSource().equals(pasteText)) {
-
-            paste();
-
-        } else if (e.getSource().equals(openAbout)) {
-            new AboutDialog();
-        } else if (e.getSource().equals(openPrefs)) {
-            new PrefsDialog();
-        } else if (e.getSource().equals(editWord)) {
-
-            middlePane.editSelectedWord();
-
-        }
-
-    }
-
-    private void chooseFile() {
-
-        if (jfc != null) { // Make sure we have created the JFileChooser instance
-            jfc.setFileFilter(new FileNameExtensionFilter("Text Files", "txt")); // Set file filter
-            int returnVal = jfc.showDialog(this, "Define"); // Get return value of it
-
-            if (returnVal == JFileChooser.APPROVE_OPTION) { // If file was approved
-                try { // Try to read it
-                    if (jfc.getSelectedFile().exists()) {
-                        Scanner scanner = new Scanner(jfc.getSelectedFile());
-                        getWordsFrom(scanner);
-                    }
-                } catch (Exception x) {
-                    System.out.println("Failed to read file! Stack trace:");
-                    x.printStackTrace();
-                }
-            }
-        }
-
     }
 
     /**
@@ -323,17 +261,14 @@ public class AppWindow extends JFrame implements ActionListener, KeyListener {
 
     @Override
     public void keyPressed(KeyEvent e) {
-
-        switch (e.getKeyCode()) {
-            case KeyEvent.VK_V -> {
-                if (keyBeingPressed == KeyEvent.VK_CONTROL || keyBeingPressed == KeyEvent.VK_META) paste();
+        // For ctrl--or meta/command in macOS-- + (something) shortcuts
+        if (keyBeingPressed == KeyEvent.VK_CONTROL || keyBeingPressed == KeyEvent.VK_META) {
+            switch (e.getKeyCode()) {
+                case KeyEvent.VK_V -> paste();
+                case KeyEvent.VK_C -> copy(new StringSelection(middlePane.getStatusText()));
             }
-            case KeyEvent.VK_C -> {
-                if (keyBeingPressed == KeyEvent.VK_CONTROL || keyBeingPressed == KeyEvent.VK_META)
-                    copy(new StringSelection(middlePane.getStatusText()));
-            }
-            case KeyEvent.VK_BACK_SPACE -> removeSelectedWord();
-        }
+        } else // Else check for individual key shortcuts:
+            if (e.getKeyCode() == KeyEvent.VK_BACK_SPACE) removeSelectedWord();
 
         keyBeingPressed = e.getKeyCode();
     }
