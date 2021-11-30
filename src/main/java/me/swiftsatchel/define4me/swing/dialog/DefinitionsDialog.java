@@ -94,7 +94,8 @@ public class DefinitionsDialog extends JDialog {
         for (Object obj : definitionArrays.get(word)) {
             String def = ((JSONObject) obj).get("definition").toString();
 
-            if (def.length() > 45) def = def.substring(0, 42) + "...";
+            int charLimit = 50;
+            if (def.length() > charLimit) def = def.substring(0, charLimit - 3) + "...";
             definitionsList.addItem(def);
         }
 
