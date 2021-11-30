@@ -52,9 +52,15 @@ public class AddWordDialog extends JDialog implements ActionListener, KeyListene
     private void acceptWord() {
 
         String word = WordParser.parseString(textField.getText());
-        if (!word.isBlank()) { // If parsed characters are not blank
-            accepted = true;
+
+        // If parsed characters are not equal to the typed in text then change to the parsed ones to show user,
+        // They could then change it or add the parsed text
+        if (!word.equals(textField.getText())) {
+
             textField.setText(word);
+
+        } else if (!word.isBlank()) { // Else if parsed characters are not blank then accept them
+            accepted = true;
             setVisible(false);
         }
 
