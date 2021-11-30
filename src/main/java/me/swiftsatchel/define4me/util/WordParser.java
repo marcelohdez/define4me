@@ -19,21 +19,24 @@ public final class WordParser {
             }
 
         // Check through every character
+        int lastLetter = firstLetter;
         for (int i = firstLetter; i < string.length(); i++) {
             char c = string.charAt(i);
-            // Check if there is a letter after this space, if so add it else end this word here.
+            // If character is a space and there's no letter afterwards continue, else add it.
             if (Character.isSpaceChar(c)) {
-                if (i + 1 < string.length()) // If there is a next character:
-                    if (!Character.isLetter(string.charAt(i + 1))) {
-                        break;
-                    } else wordBuilder.append(c);
-
-            } else if (Character.isLetter(c) || c == '-') // If current character is a letter or hyphen append it:
+                if (i + 1 < string.length()) {
+                    if (!Character.isLetter(string.charAt(i + 1))) continue;
+                    wordBuilder.append(c);
+                }
+            } else if (Character.isLetter(c)) { // Else if it's a letter add it and set lastLetter to next index
                 wordBuilder.append(c);
+                lastLetter = i + 1;
+            } else if (c == '-') wordBuilder.append(c); // Else if it's a hyphen just add it.
         }
+        // Remove stuff after last letter:
+        if (wordBuilder.length() > lastLetter) wordBuilder.delete(lastLetter, wordBuilder.length());
 
         return wordBuilder.toString();
-
     }
 
 }
