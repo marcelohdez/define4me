@@ -21,7 +21,8 @@ public final class WordParser {
         // Check through every character
         int lastLetter = firstLetter;
         for (int i = firstLetter; i < string.length(); i++) {
-            char c = string.charAt(i);
+            if (string.startsWith(" -", i)) break; // For lists with hyphens after words
+            char c = string.charAt(i); // Save current char
             // If character is a space and there's no letter afterwards continue, else add it.
             if (Character.isSpaceChar(c)) {
                 if (i + 1 < string.length()) {
