@@ -1,9 +1,9 @@
 package me.swiftsatchel.define4me.swing;
 
-import me.swiftsatchel.define4me.Main;
 import me.swiftsatchel.define4me.swing.comp.MiddlePane;
 import me.swiftsatchel.define4me.swing.dialog.*;
 import me.swiftsatchel.define4me.util.Settings;
+import me.swiftsatchel.define4me.util.WordParser;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -63,7 +63,7 @@ public class AppWindow extends JFrame implements KeyListener {
         initComps();
 
         pack();
-        setMinimumSize(new Dimension((int) (getWidth() * 1.2), (int) (getHeight() * 1.2)));
+        setMinimumSize(new Dimension((int) (getWidth() * 1.4), (int) (getHeight() * 1.2)));
         setLocationRelativeTo(null); // Center on main screen
         setVisible(true);
 
@@ -143,29 +143,9 @@ public class AppWindow extends JFrame implements KeyListener {
                     .accepted())
                 middlePane.clear();
 
-        StringBuilder wordBuilder;
-
         while (reader.hasNextLine()) {
-
-            wordBuilder = new StringBuilder();
-            String line = reader.nextLine(); // Store next line in string
-
-            int firstLetter = -1; // Used to get rid of extra white space at start (ex: "   hello")
-            for (int i = 0; i < line.length(); i++)
-                if (!line.substring(i, i+1).isBlank()) {
-                    firstLetter = i;
-                    break;
-                }
-
-            for (int i = firstLetter; i < line.length(); i++) // Add every accepted character
-                if (Main.ACCEPTED.contains(line.substring(i, i+1).toLowerCase())) {
-                    // If current and next character is " -" go to next line, for text with hyphens after words
-                    if (line.startsWith(" -", i)) break;
-                    wordBuilder.append(line.charAt(i)); // Else add the current character
-                }
-
-            String word = wordBuilder.toString();
-            if (!word.isBlank()) addWord(word); // If word si not blank then add it
+            String word = WordParser.parseString(reader.nextLine());
+            if (!word.isBlank()) addWord(word); // If parsed characters are blank then add it
         }
 
     }

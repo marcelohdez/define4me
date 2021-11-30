@@ -1,6 +1,6 @@
 package me.swiftsatchel.define4me.swing.dialog;
 
-import me.swiftsatchel.define4me.Main;
+import me.swiftsatchel.define4me.util.WordParser;
 
 import javax.swing.*;
 import java.awt.*;
@@ -51,21 +51,10 @@ public class AddWordDialog extends JDialog implements ActionListener, KeyListene
 
     private void acceptWord() {
 
-        int firstLetter = -1; // Used to get rid of extra white space at start (ex: "   hello")
-        for (int i = 0; i < textField.getText().length(); i++)
-            if (!textField.getText().substring(i, i + 1).isBlank()) {
-                firstLetter = i;
-                break;
-            }
-
-        boolean allowed = true;
-        for (int i = firstLetter; i < textField.getText().length(); i++) // Make sure all characters are allowed
-            if (!(Main.ACCEPTED.contains(textField.getText().substring(i, i+1).toLowerCase())))
-                allowed = false;
-
-        if (allowed && !textField.getText().isBlank()) { // If all characters passed check and word is not blank
+        String word = WordParser.parseString(textField.getText());
+        if (!word.isBlank()) { // If parsed characters are not blank
             accepted = true;
-            textField.setText(textField.getText().substring(firstLetter));
+            textField.setText(word);
             setVisible(false);
         }
 
