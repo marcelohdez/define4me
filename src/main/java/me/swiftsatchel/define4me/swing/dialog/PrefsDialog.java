@@ -15,10 +15,6 @@ public class PrefsDialog extends JDialog implements WindowListener {
     private final JRadioButton preferFirstDefinition = new JRadioButton("First");
     private final JRadioButton preferToAskDefinition = new JRadioButton("Ask If Multiple");
 
-    // Radio buttons for grammar preference
-    private final JRadioButton preferFirstGrammar = new JRadioButton("First");
-    private final JRadioButton preferToAskGrammar = new JRadioButton("Ask If Multiple");
-
     public PrefsDialog() {
 
         setTitle("Preferences");
@@ -30,7 +26,6 @@ public class PrefsDialog extends JDialog implements WindowListener {
         setLayout(new BoxLayout(getContentPane(), BoxLayout.Y_AXIS));
         initComps();
         createRadioRow("Definition choice:", preferFirstDefinition, preferToAskDefinition);
-        createRadioRow("Grammar Preference (noun, adj., etc.):", preferFirstGrammar, preferToAskGrammar);
 
         pack();
         setLocationRelativeTo(null);
@@ -44,16 +39,12 @@ public class PrefsDialog extends JDialog implements WindowListener {
         preferFirstDefinition.setSelected(Settings.prefersFirstDefinition());
         preferToAskDefinition.setSelected(!preferFirstDefinition.isSelected());
 
-        // Grammar preference
-        preferFirstGrammar.setSelected(Settings.prefersFirstGrammar());
-        preferToAskGrammar.setSelected(!preferFirstGrammar.isSelected());
-
     }
 
     private void createRadioRow(String labelText, JRadioButton... buttons) {
 
         JPanel pnl = new JPanel();
-        ButtonGroup group = new ButtonGroup(); // Make it so only one radio button can be activated at a time
+        ButtonGroup group = new ButtonGroup(); // Only one radio button can be activated per group
 
         pnl.add(new JLabel(labelText));
         for (JRadioButton button : buttons) {
@@ -69,7 +60,6 @@ public class PrefsDialog extends JDialog implements WindowListener {
     public void windowClosing(WindowEvent e) {
 
         Settings.setDefinitionPreference(preferFirstDefinition.isSelected());
-        Settings.setGrammarPreference(preferFirstGrammar.isSelected());
 
     }
 

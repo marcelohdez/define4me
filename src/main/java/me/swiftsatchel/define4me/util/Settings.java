@@ -15,12 +15,4 @@ public final class Settings {
         PREFS.putBoolean("preferFirstDefinition", preference);
     }
 
-    public static boolean prefersFirstGrammar() {
-        return PREFS.getBoolean("preferFirstGrammar", true);
-    }
-
-    public static void setGrammarPreference(boolean preference) {
-        PREFS.putBoolean("preferFirstGrammar", preference);
-    }
-
 }
