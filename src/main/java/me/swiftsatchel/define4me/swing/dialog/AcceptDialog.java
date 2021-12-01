@@ -22,6 +22,7 @@ public class AcceptDialog extends JDialog implements ActionListener {
 
         JTextArea textArea = new JTextArea(text);
         textArea.setEditable(false);
+        textArea.setBackground(UIManager.getColor("panel.background"));
 
         acceptButton = new JButton(acceptButtonText);
         JButton cancel = new JButton(cancelButtonText);
