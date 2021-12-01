@@ -13,7 +13,7 @@ public final class WordParser {
         // Find starting letter to not keep any starting space, ex: "  hi" -> "hi"
         int firstLetter = 0;
         for (int i = 0; i < string.length(); i++)
-            if (!string.substring(i, i+1).isBlank()) {
+            if (Character.isLetter(string.charAt(i))) {
                 firstLetter = i;
                 break;
             }

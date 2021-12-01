@@ -135,7 +135,7 @@ public class AppWindow extends JFrame implements KeyListener {
 
         while (reader.hasNextLine()) {
             String word = WordParser.parseString(reader.nextLine());
-            if (!word.isBlank()) addWord(word); // If parsed characters are blank then add it
+            if (!word.isEmpty()) addWord(word); // If parsed characters are not empty then add word
         }
 
     }
