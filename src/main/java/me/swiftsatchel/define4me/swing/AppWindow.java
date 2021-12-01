@@ -2,6 +2,7 @@ package me.swiftsatchel.define4me.swing;
 
 import me.swiftsatchel.define4me.swing.comp.MiddlePane;
 import me.swiftsatchel.define4me.swing.dialog.*;
+import me.swiftsatchel.define4me.util.Init;
 import me.swiftsatchel.define4me.util.Settings;
 import me.swiftsatchel.define4me.util.WordParser;
 import org.json.simple.JSONArray;
@@ -75,7 +76,7 @@ public class AppWindow extends JFrame implements KeyListener {
         copyText.addActionListener((e) -> copy());
         pasteFromMenuBar.addActionListener((e) -> paste());
         pasteFromWordList.addActionListener((e) -> paste());
-        openAbout.addActionListener((e) -> new AboutDialog());
+        openAbout.addActionListener((e) -> new AboutDialog(middlePane.wordsAmount()));
         openPrefs.addActionListener((e) -> new PrefsDialog());
         editWord.addActionListener((e) -> middlePane.editSelectedWord());
         middlePane.getRemoveButton().addActionListener((e) -> removeSelectedWord());
@@ -93,7 +94,7 @@ public class AppWindow extends JFrame implements KeyListener {
         });
 
         defineButton.setEnabled(false); // Disable define button until we have words to define
-        initButtons(defineButton, openAbout, openPrefs, pasteFromMenuBar, copyText, editWord,
+        Init.buttons(this, defineButton, openAbout, openPrefs, pasteFromMenuBar, copyText, editWord,
                 pasteFromWordList);
 
         fileMenu.add(openAbout);
@@ -107,25 +108,14 @@ public class AppWindow extends JFrame implements KeyListener {
 
     }
 
-    /**
-     * Initializes buttons with this as KeyListener then gives them a hand cursor button
-     * @param buttons Buttons to initialize
-     */
-    public void initButtons(AbstractButton... buttons) {
-        for (AbstractButton b : buttons) {
-            b.addKeyListener(this);
-            b.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        }
-    }
-
     private void removeSelectedWord() {
         if (middlePane.removeSelectedWord(true))
-            defineButton.setEnabled(middlePane.getWordsSize() > 0);
+            defineButton.setEnabled(middlePane.wordsAmount() > 0);
     }
 
     private void addWord(String word) {
         if (middlePane.addWord(word))
-            defineButton.setEnabled(middlePane.getWordsSize() > 0);
+            defineButton.setEnabled(middlePane.wordsAmount() > 0);
     }
 
     /**
@@ -135,7 +125,7 @@ public class AppWindow extends JFrame implements KeyListener {
      */
     private void getWordsFrom(Scanner reader) {
 
-        if (middlePane.getWordsSize() > 0)
+        if (middlePane.wordsAmount() > 0)
             if (new AcceptDialog("""
                     Would you like to clear your
                     current list of words or add
@@ -158,13 +148,13 @@ public class AppWindow extends JFrame implements KeyListener {
         // create a thread pool the size of how many we will use, ideally one per word, but if that's more than
         // the amount of cores available then stop at that number. (also 16 is ConcurrentHashMap's concurrent limit)
         Thread[] threadList = new Thread[
-                Math.min(Runtime.getRuntime().availableProcessors(), Math.min(middlePane.getWordsSize(), 16)) ];
+                Math.min(Runtime.getRuntime().availableProcessors(), Math.min(middlePane.wordsAmount(), 16)) ];
 
         for (int i = 0; i < threadList.length; i++) { // Create a new thread for every open spot in threadList
             int threadNumber = i; // Local value to pass to thread's for loop.
 
             threadList[i] = new Thread(() -> {
-                for (int w = threadNumber; w < middlePane.getWordsSize(); w++) { // Start on our thread number, and get words 1 by 1
+                for (int w = threadNumber; w < middlePane.wordsAmount(); w++) { // Start on our thread number, and get words 1 by 1
                     if (!definitions.containsKey(middlePane.getWordAt(w))) { // If the current word has not been defined yet
                         // Default text + having a key marks this word as defined to other threads
                         definitions.put(middlePane.getWordAt(w), "No definition found");

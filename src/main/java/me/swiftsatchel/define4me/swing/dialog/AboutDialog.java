@@ -6,7 +6,7 @@ import javax.swing.*;
 
 public class AboutDialog extends JDialog {
 
-    public AboutDialog() {
+    public AboutDialog(int wordAmount) {
 
         setTitle("About");
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
@@ -14,7 +14,7 @@ public class AboutDialog extends JDialog {
         setResizable(false);
 
         setLayout(new BoxLayout(getContentPane(), BoxLayout.Y_AXIS));
-        createProgramAbout();
+        createProgramAbout(wordAmount);
 
         pack();
         setLocationRelativeTo(null);
@@ -22,12 +22,14 @@ public class AboutDialog extends JDialog {
 
     }
 
-    private void createProgramAbout() {
+    private void createProgramAbout(int wordAmount) {
 
         JTextArea infoText = new JTextArea("""
                 Version: $v
+                Words: $w
                 """
-                .replace("$v", Main.VERSION));
+                .replace("$v", Main.VERSION)
+                .replace("$w", String.valueOf(wordAmount)));
 
         infoText.setEditable(false);
         infoText.setAlignmentX(0.5f);

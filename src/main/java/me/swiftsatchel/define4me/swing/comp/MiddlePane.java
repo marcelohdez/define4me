@@ -2,6 +2,7 @@ package me.swiftsatchel.define4me.swing.comp;
 
 import me.swiftsatchel.define4me.swing.AppWindow;
 import me.swiftsatchel.define4me.swing.dialog.EditWordDialog;
+import me.swiftsatchel.define4me.util.Init;
 
 import javax.swing.*;
 import java.awt.*;
@@ -41,7 +42,7 @@ public class MiddlePane extends JTabbedPane {
         statusText.addKeyListener(kl);
         statusText.setComponentPopupMenu(textMenu);
 
-        app.initButtons(addButton, removeButton);
+        Init.buttons(app, addButton, removeButton);
 
     }
 
@@ -70,7 +71,7 @@ public class MiddlePane extends JTabbedPane {
         return addButton;
     }
 
-    public int getWordsSize() {
+    public int wordsAmount() {
         return wordsArray.size();
     }
 

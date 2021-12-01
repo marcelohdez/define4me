@@ -1,5 +1,6 @@
 package me.swiftsatchel.define4me.swing.dialog;
 
+import me.swiftsatchel.define4me.util.Init;
 import me.swiftsatchel.define4me.util.WordParser;
 
 import javax.swing.*;
@@ -34,6 +35,7 @@ public class AddWordDialog extends JDialog implements ActionListener, KeyListene
         buttonRow.add(acceptButton);
         buttonRow.add(cancelButton);
         add(buttonRow, BorderLayout.SOUTH);
+        Init.buttons(null, acceptButton, cancelButton);
 
         pack();
 

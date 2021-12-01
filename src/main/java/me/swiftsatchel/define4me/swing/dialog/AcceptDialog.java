@@ -1,5 +1,7 @@
 package me.swiftsatchel.define4me.swing.dialog;
 
+import me.swiftsatchel.define4me.util.Init;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -33,6 +35,7 @@ public class AcceptDialog extends JDialog implements ActionListener {
 
         add(textArea, BorderLayout.CENTER);
         add(buttonRow, BorderLayout.SOUTH);
+        Init.buttons(null, acceptButton);
 
         pack();
 
