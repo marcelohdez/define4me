@@ -14,6 +14,7 @@ public final class Init {
         for (AbstractButton b : buttons) {
             if (kl != null) b.addKeyListener(kl);
             b.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+            if (b instanceof JButton) b.setMargin(new Insets(6, 12, 6, 12));
         }
     }
 

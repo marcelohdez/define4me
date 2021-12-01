@@ -35,7 +35,7 @@ public class AcceptDialog extends JDialog implements ActionListener {
 
         add(textArea, BorderLayout.CENTER);
         add(buttonRow, BorderLayout.SOUTH);
-        Init.buttons(null, acceptButton);
+        Init.buttons(null, acceptButton, cancel);
 
         pack();
 
