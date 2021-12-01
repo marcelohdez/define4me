@@ -222,13 +222,15 @@ public class AppWindow extends JFrame implements KeyListener {
         JSONArray jsonArray = (JSONArray) parser.parse(jsonText); // Get all of json
         JSONObject jsonObject = (JSONObject) jsonArray.get(0);  // Get first use of word
         jsonArray = (JSONArray) jsonObject.get("meanings");     // Get array of "meanings"
-        jsonObject = (JSONObject) jsonArray.get(0);             // Get first object of "meaning"
-        jsonArray = (JSONArray) jsonObject.get("definitions");  // Get array of definitions
 
         // If user prefers to choose between multiple definitions:
         if (!Settings.prefersFirstDefinition() && jsonArray.size() > 1) {
-            definitionsDlg.addDefinitionArrayFor(word, jsonArray); // Add this word and its definitions to definitionsDlg
-        } else { // Else select first:
+
+            definitionsDlg.addMeaningsArrayFor(word, jsonArray); // Add this word and its definitions to definitionsDlg
+
+        } else { // Else select first meaning and definition:
+            jsonObject = (JSONObject) jsonArray.get(0);             // Get first object of "meanings"
+            jsonArray = (JSONArray) jsonObject.get("definitions");  // Get array of definitions
             jsonObject = (JSONObject) jsonArray.get(0);         // Get first definition object
             definitions.put(word, jsonObject.get("definition").toString()); // Add to definitions
         }

@@ -6,6 +6,7 @@ import org.json.simple.JSONObject;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
+import java.util.ArrayList;
 import java.util.HashMap;
 
 /**
@@ -17,7 +18,7 @@ public class DefinitionsDialog extends JDialog {
     private final JPanel definitionsPanel = new JPanel();
 
     // Hash maps
-    private final HashMap<String, JSONArray> definitionArrays = new HashMap<>();
+    private final HashMap<String, ArrayList<String>> definitionArrays = new HashMap<>();
     private final HashMap<String, String> wanted = new HashMap<>();
 
     public DefinitionsDialog() {
@@ -40,8 +41,19 @@ public class DefinitionsDialog extends JDialog {
 
     }
 
-    public void addDefinitionArrayFor(String word, JSONArray definitionArray) {
-        definitionArrays.put(word, definitionArray);
+    public void addMeaningsArrayFor(String word, JSONArray meaningsArray) {
+        ArrayList<String> availableDefinitions = new ArrayList<>();
+
+        for (Object value : meaningsArray) { // Look through available meanings
+            JSONObject jsonObject = (JSONObject) value;
+            JSONArray jsonArray = (JSONArray) jsonObject.get("definitions");  // Get array of definitions
+            for (Object o : jsonArray) { // look through definitions
+                jsonObject = (JSONObject) o; // Get definition object
+                availableDefinitions.add(jsonObject.get("definition").toString());
+            }
+        }
+
+        definitionArrays.put(word, availableDefinitions);
     }
 
     /**
@@ -91,11 +103,9 @@ public class DefinitionsDialog extends JDialog {
         pnl.add(wordLabel, BorderLayout.WEST); // Place word label on left
         pnl.add(definitionsList, BorderLayout.CENTER); // Place definitions list box on center
 
-        for (Object obj : definitionArrays.get(word)) {
-            String def = ((JSONObject) obj).get("definition").toString();
-
-            int charLimit = 50;
-            if (def.length() > charLimit) def = def.substring(0, charLimit - 3) + "...";
+        for (String def : definitionArrays.get(word)) {
+            final int CHAR_LIMIT = 50;
+            if (def.length() > CHAR_LIMIT) def = def.substring(0, CHAR_LIMIT - 3) + "...";
             definitionsList.addItem(def);
         }
 
@@ -109,7 +119,7 @@ public class DefinitionsDialog extends JDialog {
      * @return The definition at the given index of a word's possible definitions
      */
     private String useDefinitionAt(int index, String of) {
-        return ((JSONObject) definitionArrays.get(of).get(index)).get("definition").toString();
+        return definitionArrays.get(of).get(index);
     }
 
 }
