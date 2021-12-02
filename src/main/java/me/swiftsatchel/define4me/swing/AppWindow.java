@@ -33,9 +33,6 @@ public class AppWindow extends JFrame implements KeyListener {
     private final JMenu fileMenu = new JMenu("File");
     private final JMenuItem openAbout = new JMenuItem("About");
     private final JMenuItem openPrefs = new JMenuItem("Preferences");
-    // Words menu
-    private final JMenu wordsMenu = new JMenu("Words");
-    private final JMenuItem pasteFromMenuBar = new JMenuItem("Paste");
 
     // Right click menus: Text area
     private final JPopupMenu rightClickText = new JPopupMenu();
@@ -46,6 +43,7 @@ public class AppWindow extends JFrame implements KeyListener {
     private final JMenuItem pasteFromWordList = new JMenuItem("Paste");
 
     // Main components
+    private final JButton pasteButton = new JButton("Paste");
     private final MiddlePane middlePane = new MiddlePane(this, rightClickWords, rightClickText, this); // Center tabbed pane
     private final JButton defineButton = new JButton("Define");
 
@@ -58,13 +56,14 @@ public class AppWindow extends JFrame implements KeyListener {
         addKeyListener(this);
 
         setJMenuBar(menuBar);
+        add(pasteButton, BorderLayout.WEST);
         add(middlePane, BorderLayout.CENTER);
         add(defineButton, BorderLayout.EAST);
 
         initComps();
 
         pack();
-        setMinimumSize(new Dimension((int) (getWidth() * 1.4), (int) (getHeight() * 1.2)));
+        setMinimumSize(new Dimension((int) (getWidth() * 1.2), (int) (getHeight() * 1.1)));
         setLocationRelativeTo(null); // Center on main screen
         setVisible(true);
 
@@ -74,13 +73,13 @@ public class AppWindow extends JFrame implements KeyListener {
     private void initComps() {
 
         copyText.addActionListener((e) -> copy());
-        pasteFromMenuBar.addActionListener((e) -> paste());
         pasteFromWordList.addActionListener((e) -> paste());
         openAbout.addActionListener((e) -> new AboutDialog(middlePane.wordsAmount()));
         openPrefs.addActionListener((e) -> new PrefsDialog());
         editWord.addActionListener((e) -> middlePane.editSelectedWord());
         middlePane.getRemoveButton().addActionListener((e) -> removeSelectedWord());
 
+        pasteButton.addActionListener((e) -> paste());
         middlePane.getAddButton().addActionListener((e -> {
             AddWordDialog awd = new AddWordDialog();
             if (awd.accepted()) addWord(awd.getWord());
@@ -94,14 +93,12 @@ public class AppWindow extends JFrame implements KeyListener {
         });
 
         defineButton.setEnabled(false); // Disable define button until we have words to define
-        Init.buttons(this, defineButton, openAbout, openPrefs, pasteFromMenuBar, copyText, editWord,
+        Init.buttons(this, pasteButton, defineButton, openAbout, openPrefs, copyText, editWord,
                 pasteFromWordList);
 
         fileMenu.add(openAbout);
         fileMenu.add(openPrefs);
-        wordsMenu.add(pasteFromMenuBar);
         menuBar.add(fileMenu);
-        menuBar.add(wordsMenu);
         rightClickWords.add(editWord);
         rightClickWords.add(pasteFromWordList);
         rightClickText.add(copyText);
