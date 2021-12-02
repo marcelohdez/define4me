@@ -1,8 +1,11 @@
 package me.swiftsatchel.define4me.swing.dialog;
 
 import me.swiftsatchel.define4me.Main;
+import me.swiftsatchel.define4me.util.Init;
 
 import javax.swing.*;
+import java.awt.*;
+import java.awt.datatransfer.StringSelection;
 
 public class AboutDialog extends JDialog {
 
@@ -23,18 +26,31 @@ public class AboutDialog extends JDialog {
     }
 
     private void createProgramAbout(int wordAmount) {
-
+        // Info text:
         JTextArea infoText = new JTextArea("""
-                Version: $v
-                Words: $w
+                Program version: $v
+                
+                Words on list: $w
                 """
                 .replace("$v", Main.VERSION)
                 .replace("$w", String.valueOf(wordAmount)));
 
         infoText.setEditable(false);
         infoText.setAlignmentX(0.5f);
+        infoText.setMargin(new Insets(8, 8, 8, 8));
+        // Copy version right-click menu:
+        JPopupMenu copyMenu = new JPopupMenu();
+        JMenuItem copyVersion = new JMenuItem("Copy version");
 
-        add(infoText);
+        copyMenu.add(copyVersion);
+        Init.buttons(null, copyVersion);
+        copyVersion.addActionListener((e) -> {
+            StringSelection text = new StringSelection("v" + Main.VERSION);
+            Toolkit.getDefaultToolkit().getSystemClipboard().setContents(text, text);
+        });
+
+        infoText.setComponentPopupMenu(copyMenu); // Add right-click menu to infoText
+        add(infoText); // Add infoText to window
 
     }
 

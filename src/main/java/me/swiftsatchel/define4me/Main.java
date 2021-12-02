@@ -10,7 +10,6 @@ public class Main {
     public static final String VERSION = "1.0-DEV";
 
     public static void main(String[] args) {
-
         // Try to get the system's look and feel and set to it
         try {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
@@ -22,7 +21,7 @@ public class Main {
                 i.printStackTrace();
             }
         }
-
+        // If we are on macOS, enable use of the menu bar at the top of the screen (if enabled in settings)
         if (System.getProperty("os.name").equals("Mac OS X") && Settings.prefersMacMenuBar())
             System.setProperty("apple.laf.useScreenMenuBar", "true");
 

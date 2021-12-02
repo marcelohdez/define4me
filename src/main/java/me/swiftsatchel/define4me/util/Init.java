@@ -7,7 +7,9 @@ import java.awt.event.KeyListener;
 public final class Init {
 
     /**
-     * Initializes the given buttons with a KeyListener and a hand cursor
+     * Initializes the given buttons with a KeyListener, a hand cursor, and
+     * some padding if they are JButtons.
+     *
      * @param buttons Buttons to initialize
      */
     public static void buttons(KeyListener kl, AbstractButton... buttons) {
