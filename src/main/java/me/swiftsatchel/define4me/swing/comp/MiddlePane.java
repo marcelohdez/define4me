@@ -8,6 +8,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.KeyListener;
 import java.util.ArrayList;
+import java.util.Locale;
 
 public class MiddlePane extends JTabbedPane {
 
@@ -98,18 +99,33 @@ public class MiddlePane extends JTabbedPane {
     }
 
     public boolean addWord(String word) {
-        if (!wordsArray.contains(word)) { // Avoid adding a duplicate
+        if (arrayDoesNotHave(word)) {
             wordsArray.add(word);
             words.addElement(word);
-            return true;
+            return true; // Adding the word was successful
         } else return false;
     }
 
-    public void addAt(int i, String word) {
-        if (!wordsArray.contains(word)) { // Avoid adding a duplicate
+    public void replaceWordAt(int i, String word) {
+        if (arrayDoesNotHave(word)) {
             wordsArray.add(i, word);
             words.add(i, word);
         }
+    }
+
+    /**
+     * Checks whether the given word should be added to wordsArray, by comparing
+     * all the entries in wordsArray against the given word, both turned lowercase
+     * to make sure there are no duplicates.
+     *
+     * @param word Word to check against
+     * @return Whether wordsArray does not contain the given word
+     */
+    private boolean arrayDoesNotHave(String word) {
+        for (String str : wordsArray)
+            if (str.toLowerCase(Locale.ROOT).equals(word.toLowerCase(Locale.ROOT))) return false;
+
+        return true;
     }
 
     public void editSelectedWord() {
@@ -119,7 +135,7 @@ public class MiddlePane extends JTabbedPane {
             EditWordDialog ewd = new EditWordDialog(words.get(index));
             if (ewd.accepted()) {
                 removeSelectedWord(false);
-                addAt(index, ewd.getWord());
+                replaceWordAt(index, ewd.getWord());
                 wordList.setSelectedIndex(index);
             }
             ewd.dispose();
