@@ -1,6 +1,7 @@
 package me.swiftsatchel.define4me;
 
 import me.swiftsatchel.define4me.swing.AppWindow;
+import me.swiftsatchel.define4me.util.Settings;
 
 import javax.swing.*;
 
@@ -22,7 +23,10 @@ public class Main {
             }
         }
 
-        new AppWindow();
+        if (System.getProperty("os.name").equals("Mac OS X") && Settings.prefersMacMenuBar())
+            System.setProperty("apple.laf.useScreenMenuBar", "true");
+
+        new AppWindow(); // Open app window
 
     }
 

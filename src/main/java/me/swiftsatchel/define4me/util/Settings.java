@@ -15,4 +15,13 @@ public final class Settings {
         PREFS.putBoolean("preferFirstDefinition", preference);
     }
 
+    public static boolean prefersMacMenuBar() {
+        // Use macOS's menu bar instead of the in-app one
+        return PREFS.getBoolean("preferMacMenuBar", true);
+    }
+
+    public static void setMacMenuBarPreference(boolean preference) {
+        PREFS.putBoolean("preferMacMenuBar", preference);
+    }
+
 }

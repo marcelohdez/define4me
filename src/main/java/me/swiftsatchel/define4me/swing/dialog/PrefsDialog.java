@@ -11,9 +11,12 @@ import java.awt.event.WindowListener;
  */
 public class PrefsDialog extends JDialog implements WindowListener {
 
-    // Radio buttons for definition choice
+    // Definition preference
     private final JRadioButton preferFirstDefinition = new JRadioButton("First");
     private final JRadioButton preferToAskDefinition = new JRadioButton("Ask If Multiple");
+    // Mac menu bar preference
+    private final JRadioButton preferMacMenuBar = new JRadioButton("macOS");
+    private final JRadioButton preferInAppMenuBar = new JRadioButton("In-App");
 
     public PrefsDialog() {
 
@@ -26,6 +29,8 @@ public class PrefsDialog extends JDialog implements WindowListener {
         setLayout(new BoxLayout(getContentPane(), BoxLayout.Y_AXIS));
         initComps();
         createRadioRow("Definition choice:", preferFirstDefinition, preferToAskDefinition);
+        if (System.getProperty("os.name").equals("Mac OS X"))
+            createRadioRow("Menu bar style (requires restart):", preferMacMenuBar, preferInAppMenuBar);
 
         pack();
         setLocationRelativeTo(null);
@@ -38,6 +43,9 @@ public class PrefsDialog extends JDialog implements WindowListener {
         // Definition choice
         preferFirstDefinition.setSelected(Settings.prefersFirstDefinition());
         preferToAskDefinition.setSelected(!preferFirstDefinition.isSelected());
+        // Mac menu bar choice
+        preferMacMenuBar.setSelected(Settings.prefersMacMenuBar());
+        preferInAppMenuBar.setSelected(!preferMacMenuBar.isSelected());
 
     }
 
@@ -60,6 +68,7 @@ public class PrefsDialog extends JDialog implements WindowListener {
     public void windowClosing(WindowEvent e) {
 
         Settings.setDefinitionPreference(preferFirstDefinition.isSelected());
+        Settings.setMacMenuBarPreference(preferMacMenuBar.isSelected());
 
     }
 
