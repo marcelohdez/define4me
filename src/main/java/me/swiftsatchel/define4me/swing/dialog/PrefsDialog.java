@@ -1,5 +1,6 @@
 package me.swiftsatchel.define4me.swing.dialog;
 
+import me.swiftsatchel.define4me.Define4Me;
 import me.swiftsatchel.define4me.util.Settings;
 
 import javax.swing.*;
@@ -46,6 +47,10 @@ public class PrefsDialog extends JDialog implements WindowListener {
         // Mac menu bar choice
         preferMacMenuBar.setSelected(Settings.prefersMacMenuBar());
         preferInAppMenuBar.setSelected(!preferMacMenuBar.isSelected());
+
+        // Set hand cursor for radio buttons
+        Define4Me.initButtons(null, preferFirstDefinition, preferToAskDefinition, preferMacMenuBar,
+                preferInAppMenuBar);
 
     }
 

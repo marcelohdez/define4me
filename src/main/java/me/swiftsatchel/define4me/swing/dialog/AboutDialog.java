@@ -1,7 +1,6 @@
 package me.swiftsatchel.define4me.swing.dialog;
 
 import me.swiftsatchel.define4me.Define4Me;
-import me.swiftsatchel.define4me.util.Init;
 
 import javax.swing.*;
 import java.awt.*;
@@ -43,7 +42,7 @@ public class AboutDialog extends JDialog {
         JMenuItem copyVersion = new JMenuItem("Copy version");
 
         copyMenu.add(copyVersion);
-        Init.buttons(null, copyVersion);
+        Define4Me.initButtons(null, copyVersion);
         copyVersion.addActionListener((e) -> {
             StringSelection text = new StringSelection("v" + Define4Me.VERSION);
             Toolkit.getDefaultToolkit().getSystemClipboard().setContents(text, text);

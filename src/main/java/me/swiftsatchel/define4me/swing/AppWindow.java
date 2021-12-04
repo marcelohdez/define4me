@@ -1,8 +1,8 @@
 package me.swiftsatchel.define4me.swing;
 
+import me.swiftsatchel.define4me.Define4Me;
 import me.swiftsatchel.define4me.swing.comp.MiddlePane;
 import me.swiftsatchel.define4me.swing.dialog.*;
-import me.swiftsatchel.define4me.util.Init;
 import me.swiftsatchel.define4me.util.Settings;
 import me.swiftsatchel.define4me.util.WordParser;
 import org.json.simple.JSONArray;
@@ -93,7 +93,7 @@ public class AppWindow extends JFrame implements KeyListener {
         });
 
         defineButton.setEnabled(false); // Disable define button until we have words to define
-        Init.buttons(this, pasteButton, defineButton, openAbout, openPrefs, copyText, editWord,
+        Define4Me.initButtons(this, pasteButton, defineButton, openAbout, openPrefs, copyText, editWord,
                 pasteFromWordList);
 
         fileMenu.add(openAbout);

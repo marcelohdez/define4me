@@ -1,8 +1,8 @@
 package me.swiftsatchel.define4me.swing.comp;
 
+import me.swiftsatchel.define4me.Define4Me;
 import me.swiftsatchel.define4me.swing.AppWindow;
 import me.swiftsatchel.define4me.swing.dialog.EditWordDialog;
-import me.swiftsatchel.define4me.util.Init;
 
 import javax.swing.*;
 import java.awt.*;
@@ -43,7 +43,7 @@ public class MiddlePane extends JTabbedPane {
         statusText.addKeyListener(kl);
         statusText.setComponentPopupMenu(textMenu);
 
-        Init.buttons(app, addButton, removeButton);
+        Define4Me.initButtons(app, addButton, removeButton);
 
     }
 
