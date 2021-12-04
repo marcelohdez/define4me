@@ -25,7 +25,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class AppWindow extends JFrame implements KeyListener {
 
-    private DefinitionsDialog definitionsDlg;
+    private DefinitionsDialog definitionsDlg; // Dialog to choose definitions from if enabled in preferences
     private final ConcurrentHashMap<String, String> definitions = new ConcurrentHashMap<>(); // Word definitions
 
     // Menu bar stuffs: File menu

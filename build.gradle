@@ -3,7 +3,7 @@ plugins {
 }
 
 group 'me.swiftsatchel'
-version '1.0-DEV'
+version '1.0'
 
 sourceCompatibility = JavaVersion.VERSION_17
 targetCompatibility = JavaVersion.VERSION_17
@@ -18,13 +18,14 @@ configurations {
 }
 
 dependencies {
-    // For reading JSON files returned by dictionary api, from (https://mvnrepository.com/artifact/com.googlecode.json-simple/json-simple)
+    // For reading JSON files returned by https://dictionaryapi.dev, dependency is from:
+    // https://mvnrepository.com/artifact/com.googlecode.json-simple/json-simple
     implementation 'com.googlecode.json-simple:json-simple:1.1.1'
     extraLibs group: 'com.googlecode.json-simple', name: 'json-simple', version: '1.1.1'
 }
 
 application {
-    mainClass = 'me.swiftsatchel.define4me.Main'
+    mainClass = 'me.swiftsatchel.define4me.Define4Me'
 }
 
 jar {
@@ -33,6 +34,6 @@ jar {
         configurations.extraLibs.collect { it.isDirectory() ? it : zipTree(it) }
     }
     manifest {
-        attributes "Main-Class": 'me.swiftsatchel.define4me.Main'
+        attributes "Main-Class": 'me.swiftsatchel.define4me.Define4Me'
     }
 }

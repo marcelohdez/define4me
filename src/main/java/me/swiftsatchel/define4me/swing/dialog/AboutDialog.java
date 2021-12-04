@@ -1,6 +1,6 @@
 package me.swiftsatchel.define4me.swing.dialog;
 
-import me.swiftsatchel.define4me.Main;
+import me.swiftsatchel.define4me.Define4Me;
 import me.swiftsatchel.define4me.util.Init;
 
 import javax.swing.*;
@@ -32,7 +32,7 @@ public class AboutDialog extends JDialog {
                 
                 Words on list: $w
                 """
-                .replace("$v", Main.VERSION)
+                .replace("$v", Define4Me.VERSION)
                 .replace("$w", String.valueOf(wordAmount)));
 
         infoText.setEditable(false);
@@ -45,7 +45,7 @@ public class AboutDialog extends JDialog {
         copyMenu.add(copyVersion);
         Init.buttons(null, copyVersion);
         copyVersion.addActionListener((e) -> {
-            StringSelection text = new StringSelection("v" + Main.VERSION);
+            StringSelection text = new StringSelection("v" + Define4Me.VERSION);
             Toolkit.getDefaultToolkit().getSystemClipboard().setContents(text, text);
         });
 
