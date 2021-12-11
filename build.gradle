@@ -2,7 +2,7 @@ plugins {
     id 'application'
 }
 
-group 'me.swiftsatchel'
+group 'me.soggysandwich'
 version '1.0'
 
 sourceCompatibility = JavaVersion.VERSION_17
@@ -25,7 +25,7 @@ dependencies {
 }
 
 application {
-    mainClass = 'me.swiftsatchel.define4me.Define4Me'
+    mainClass = 'me.soggysandwich.define4me.Define4Me'
 }
 
 jar {
@@ -34,6 +34,6 @@ jar {
         configurations.extraLibs.collect { it.isDirectory() ? it : zipTree(it) }
     }
     manifest {
-        attributes "Main-Class": 'me.swiftsatchel.define4me.Define4Me'
+        attributes "Main-Class": 'me.soggysandwich.define4me.Define4Me'
     }
 }

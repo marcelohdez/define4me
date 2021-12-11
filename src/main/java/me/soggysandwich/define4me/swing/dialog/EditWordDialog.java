@@ -1,4 +1,4 @@
-package me.swiftsatchel.define4me.swing.dialog;
+package me.soggysandwich.define4me.swing.dialog;
 
 public class EditWordDialog extends AddWordDialog {
 

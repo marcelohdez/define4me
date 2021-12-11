@@ -1,4 +1,4 @@
-package me.swiftsatchel.define4me.util;
+package me.soggysandwich.define4me.util;
 
 public final class WordParser {
 

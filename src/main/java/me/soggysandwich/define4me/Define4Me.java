@@ -1,7 +1,7 @@
-package me.swiftsatchel.define4me;
+package me.soggysandwich.define4me;
 
-import me.swiftsatchel.define4me.swing.AppWindow;
-import me.swiftsatchel.define4me.util.Settings;
+import me.soggysandwich.define4me.swing.AppWindow;
+import me.soggysandwich.define4me.util.Settings;
 
 import javax.swing.*;
 import java.awt.*;

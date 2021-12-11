@@ -1,6 +1,6 @@
-package me.swiftsatchel.define4me.swing.dialog;
+package me.soggysandwich.define4me.swing.dialog;
 
-import me.swiftsatchel.define4me.Define4Me;
+import me.soggysandwich.define4me.Define4Me;
 
 import javax.swing.*;
 import java.awt.*;
