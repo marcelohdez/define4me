@@ -181,10 +181,15 @@ public class AppWindow extends JFrame implements KeyListener {
                         // Default text + having a key marks this word as defined to other threads
                         definitions.put(middlePane.getWordAt(w), "No definition found");
                         try {
-                            getDefinitionOf(middlePane.getWordAt(w));
+                            tryToDefine(middlePane.getWordAt(w));
                         } catch (Exception e) {
-                            System.out.println("Couldn't find a definition for $w!"
-                                    .replace("$w", middlePane.getWordAt(w)));
+                            if (Settings.acceptsWikipediaSummary()) {
+                                try {
+                                    tryWikipediaSummaryOf(middlePane.getWordAt(w));
+                                } catch (Exception ex) {
+                                    System.out.println("couldn't find definition of " + middlePane.getWordAt(w));
+                                }
+                            }
                         }
                     }
                 }
@@ -206,14 +211,13 @@ public class AppWindow extends JFrame implements KeyListener {
 
     }
 
-    private void getDefinitionOf(String word) throws IOException, ParseException {
+    private void tryToDefine(String word) throws IOException, ParseException {
 
-        JSONParser parser = new JSONParser();
         InputStream urlStream = new URL("https://api.dictionaryapi.dev/api/v2/entries/en/" + word).openStream();
         BufferedReader reader = new BufferedReader(new InputStreamReader(urlStream, StandardCharsets.UTF_8));
         String jsonText = getJSONText(reader);
 
-        JSONArray jsonArray = (JSONArray) parser.parse(jsonText); // Get all of json
+        JSONArray jsonArray = (JSONArray) new JSONParser().parse(jsonText); // Get all of json
         JSONObject jsonObject = (JSONObject) jsonArray.get(0);  // Get first use of word
         jsonArray = (JSONArray) jsonObject.get("meanings");     // Get array of "meanings"
 
@@ -228,6 +232,23 @@ public class AppWindow extends JFrame implements KeyListener {
             jsonObject = (JSONObject) jsonArray.get(0);         // Get first definition object
             definitions.put(word, jsonObject.get("definition").toString()); // Add to definitions
         }
+
+    }
+
+    private void tryWikipediaSummaryOf(String word) throws IOException, ParseException {
+
+        String linkFriendlyWord = word.replaceAll(" ", "%20"); // Turn all spaces into "%20"
+        InputStream urlStream = new URL("https://en.wikipedia.org/w/api.php?" + // Use wikipedia query API
+                "format=json&action=query&prop=extracts&exintro&explaintext&redirects=1&titles=" + linkFriendlyWord)
+                .openStream();
+        BufferedReader reader = new BufferedReader(new InputStreamReader(urlStream, StandardCharsets.UTF_8));
+        String jsonText = getJSONText(reader);
+
+        JSONObject jsonObject = (JSONObject) new JSONParser().parse(jsonText); // Parse response
+        jsonObject = (JSONObject) jsonObject.get("query"); // Get query section
+        jsonObject = (JSONObject) jsonObject.get("pages"); // Get pages section
+        jsonObject = (JSONObject) jsonObject.get(jsonObject.keySet().iterator().next()); // Choose first page
+        definitions.put(word, jsonObject.get("extract").toString()); // Get summary
 
     }
 
