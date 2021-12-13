@@ -248,7 +248,16 @@ public class AppWindow extends JFrame implements KeyListener {
         jsonObject = (JSONObject) jsonObject.get("query"); // Get query section
         jsonObject = (JSONObject) jsonObject.get("pages"); // Get pages section
         jsonObject = (JSONObject) jsonObject.get(jsonObject.keySet().iterator().next()); // Choose first page
-        definitions.put(word, jsonObject.get("extract").toString()); // Get summary
+
+        String text = jsonObject.get("extract").toString();
+        for (int i = 0; i < text.length(); i++) // Find the first period and get the first sentence
+            // Also make sure the next char after this period is not a number, to not cut off decimals/version numbers.
+            if (text.charAt(i) == '.' && i + 1 < text.length() && !Character.isDigit(text.charAt(i + 1))) {
+                text = text.substring(0, i + 1); // Cut text down to this first sentence
+                break; // Leave for loop
+            }
+
+        definitions.put(word, text); // Get summary
 
     }
 
