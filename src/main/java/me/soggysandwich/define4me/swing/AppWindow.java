@@ -147,26 +147,7 @@ public class AppWindow extends JFrame implements KeyListener {
         Thread[] threadList = new Thread[
                 Math.min(Runtime.getRuntime().availableProcessors(), Math.min(middlePane.wordsAmount(), 16)) ];
 
-        for (int i = 0; i < threadList.length; i++) { // Create a new thread for every open spot in threadList
-            int threadNumber = i; // Local value to pass to thread's for loop.
-
-            threadList[i] = new Thread(() -> {
-                for (int w = threadNumber; w < middlePane.wordsAmount(); w++) { // Start on our thread number, and get words 1 by 1
-                    if (!definitions.containsKey(middlePane.getWordAt(w))) { // If the current word has not been defined yet
-                        // Default text + having a key marks this word as defined to other threads
-                        definitions.put(middlePane.getWordAt(w), "No definition found");
-                        try {
-                            getDefinitionOf(middlePane.getWordAt(w));
-                        } catch (Exception e) {
-                            System.out.println("Couldn't find a definition for $w!"
-                                    .replace("$w", middlePane.getWordAt(w)));
-                        }
-                    }
-                }
-            });
-            threadList[i].start(); // Start thread
-
-        }
+        summonDefineThreads(threadList);
 
         for (Thread t : threadList) { // Wait for all threads to finish.
             try {
@@ -185,6 +166,32 @@ public class AppWindow extends JFrame implements KeyListener {
         }
 
         return sb.toString();
+
+    }
+
+    /** Summon threads into given array where each thread will attempt to define a word */
+    private void summonDefineThreads(Thread[] t) {
+
+        for (int i = 0; i < t.length; i++) { // Create a new thread for every open spot in threadList
+            int threadNumber = i; // Local value to pass to thread's for loop.
+
+            t[i] = new Thread(() -> {
+                for (int w = threadNumber; w < middlePane.wordsAmount(); w++) { // Start on our thread number, and get words 1 by 1
+                    if (!definitions.containsKey(middlePane.getWordAt(w))) { // If the current word has not been defined yet
+                        // Default text + having a key marks this word as defined to other threads
+                        definitions.put(middlePane.getWordAt(w), "No definition found");
+                        try {
+                            getDefinitionOf(middlePane.getWordAt(w));
+                        } catch (Exception e) {
+                            System.out.println("Couldn't find a definition for $w!"
+                                    .replace("$w", middlePane.getWordAt(w)));
+                        }
+                    }
+                }
+            });
+
+            t[i].start(); // Start thread
+        }
 
     }
 
