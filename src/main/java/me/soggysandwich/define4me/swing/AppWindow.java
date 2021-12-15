@@ -121,22 +121,22 @@ public class AppWindow extends JFrame implements KeyListener {
      * @param reader given scanner
      */
     private void getWordsFrom(Scanner reader) {
+        try (reader) {
+            if (middlePane.wordsAmount() > 0)
+                if (new AcceptDialog("""
+                        Would you like to clear your
+                        current list of words or add
+                        to them?""", "Clear", "Add")
+                        .accepted())
+                    middlePane.clear();
 
-        if (middlePane.wordsAmount() > 0)
-            if (new AcceptDialog("""
-                    Would you like to clear your
-                    current list of words or add
-                    to them?""", "Clear", "Add")
-                    .accepted())
-                middlePane.clear();
+            while (reader.hasNextLine()) {
+                String word = WordParser.parseString(reader.nextLine());
+                if (!word.isEmpty()) addWord(word); // If parsed characters are not empty then add word
+            }
 
-        while (reader.hasNextLine()) {
-            String word = WordParser.parseString(reader.nextLine());
-            if (!word.isEmpty()) addWord(word); // If parsed characters are not empty then add word
+            middlePane.setSelectedIndex(0); // Switch back to words tab
         }
-
-        middlePane.setSelectedIndex(0); // Switch back to words tab
-
     }
 
     private String defineWords() {
@@ -204,21 +204,21 @@ public class AppWindow extends JFrame implements KeyListener {
     }
 
     private String getJSONText(Reader r) throws IOException {
-
-        StringBuilder sb = new StringBuilder();
-        int c; // Current character
-        while ((c = r.read()) != -1) {
-            sb.append((char) c);
+        try (r) {
+            StringBuilder sb = new StringBuilder();
+            int c; // Current character
+            while ((c = r.read()) != -1) {
+                sb.append((char) c);
+            }
+            return sb.toString();
         }
-        return sb.toString();
-
     }
 
     /** Try to define the given string using meetDeveloper's Dictionary API */
     private void tryToDefineWord(String word) throws IOException, ParseException {
-        try (InputStream inputStream = new URL("https://api.dictionaryapi.dev/api/v2/entries/en/" + word).openStream()) {
+        try (var stream = new URL("https://api.dictionaryapi.dev/api/v2/entries/en/" + word).openStream()) {
             JSONArray jsonArray = (JSONArray) new JSONParser()
-                    .parse(getJSONText(new InputStreamReader(inputStream, StandardCharsets.UTF_8))); // Parse response
+                    .parse(getJSONText(new InputStreamReader(stream, StandardCharsets.UTF_8))); // Parse response
 
             JSONObject jsonObject = (JSONObject) jsonArray.get(0);  // Get first use of word
             jsonArray = (JSONArray) jsonObject.get("meanings");     // Get array of "meanings"
@@ -240,11 +240,12 @@ public class AppWindow extends JFrame implements KeyListener {
     /** Try to define the given string with the first sentence of a Wikipedia article with the same title */
     private void tryGettingWikipediaSummary(String w) {
         try { // Use wikipedia query API:
-            try (InputStream inputStream = new URL("https://en.wikipedia.org/w/api.php?" +
-                    "format=json&action=query&prop=extracts&exintro&explaintext&redirects=1&titles=" +
-                    /*Replace all spaces with %20 for link:*/w.replaceAll(" ", "%20")).openStream()) {
+            try (var stream = new URL("https://en.wikipedia.org/w/api.php?format=json&action=query" +
+                    "&prop=extracts&exintro&explaintext&redirects=1&titles=" + /*Replace all spaces with %20 for link:*/
+                    w.replaceAll(" ", "%20")).openStream()) {
+
                 JSONObject jsonObject = (JSONObject) new JSONParser()
-                        .parse(getJSONText(new InputStreamReader(inputStream, StandardCharsets.UTF_8))); // Parse response
+                        .parse(getJSONText(new InputStreamReader(stream, StandardCharsets.UTF_8))); // Parse response
 
                 jsonObject = (JSONObject) jsonObject.get("query"); // Get query section
                 jsonObject = (JSONObject) jsonObject.get("pages"); // Get pages section
