@@ -74,14 +74,14 @@ public class AppWindow extends JFrame implements KeyListener {
 
         copyText.addActionListener((e) -> copy());
         pasteFromWordList.addActionListener((e) -> paste());
-        openAbout.addActionListener((e) -> new AboutDialog(middlePane.wordsAmount()));
-        openPrefs.addActionListener((e) -> new PrefsDialog());
+        openAbout.addActionListener((e) -> new AboutDialog(this, middlePane.wordsAmount()));
+        openPrefs.addActionListener((e) -> new PrefsDialog(this));
         editWord.addActionListener((e) -> middlePane.editSelectedWord());
         middlePane.getRemoveButton().addActionListener((e) -> removeSelectedWord());
 
         pasteButton.addActionListener((e) -> paste());
         middlePane.getAddButton().addActionListener((e -> {
-            AddWordDialog awd = new AddWordDialog();
+            AddWordDialog awd = new AddWordDialog(this);
             if (awd.accepted()) addWord(awd.getWord());
             awd.dispose();
         }));
@@ -123,7 +123,7 @@ public class AppWindow extends JFrame implements KeyListener {
     private void getWordsFrom(Scanner reader) {
         try (reader) {
             if (middlePane.wordsAmount() > 0)
-                if (new AcceptDialog("""
+                if (new AcceptDialog(this, """
                         Would you like to clear your
                         current list of words or add
                         to them?""", "Clear", "Add")
@@ -142,7 +142,7 @@ public class AppWindow extends JFrame implements KeyListener {
     private String defineWords() {
 
         definitions.clear(); // Reset definitions
-        if (!Settings.prefersFirstDefinition()) definitionsDlg = new DefinitionsDialog();
+        if (!Settings.prefersFirstDefinition()) definitionsDlg = new DefinitionsDialog(this);
 
         // create a thread pool the size of how many we will use, ideally one per word, but if that's more than
         // the amount of cores available then stop at that number. (also 16 is ConcurrentHashMap's concurrent limit)

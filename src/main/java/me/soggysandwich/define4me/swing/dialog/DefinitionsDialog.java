@@ -16,13 +16,15 @@ import java.util.HashMap;
  */
 public class DefinitionsDialog extends JDialog {
 
+    private final Component parent;
     private final JPanel definitionsPanel = new JPanel();
 
     // Hash maps
     private final HashMap<String, ArrayList<String>> definitionArrays = new HashMap<>();
     private final HashMap<String, String> wanted = new HashMap<>();
 
-    public DefinitionsDialog() {
+    public DefinitionsDialog(Component parent) {
+        this.parent = parent;
 
         setTitle("Select desired definition(s)");
         setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
@@ -80,7 +82,7 @@ public class DefinitionsDialog extends JDialog {
         pack();
         if (definitionArrays.size() > 10) setSize(new Dimension((int) (getWidth() * 1.1), getWidth()));
         setModalityType(ModalityType.APPLICATION_MODAL);
-        setLocationRelativeTo(null);
+        setLocationRelativeTo(parent);
         setVisible(true);
 
         return wanted;

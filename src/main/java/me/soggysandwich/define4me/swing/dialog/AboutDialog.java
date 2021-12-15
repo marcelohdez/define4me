@@ -8,7 +8,7 @@ import java.awt.datatransfer.StringSelection;
 
 public class AboutDialog extends JDialog {
 
-    public AboutDialog(int wordAmount) {
+    public AboutDialog(Component parent, int wordAmount) {
 
         setTitle("About");
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
@@ -19,7 +19,7 @@ public class AboutDialog extends JDialog {
         createProgramAbout(wordAmount);
 
         pack();
-        setLocationRelativeTo(null);
+        setLocationRelativeTo(parent);
         setVisible(true);
 
     }

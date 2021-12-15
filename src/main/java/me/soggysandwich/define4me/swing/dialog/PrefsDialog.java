@@ -4,6 +4,7 @@ import me.soggysandwich.define4me.Define4Me;
 import me.soggysandwich.define4me.util.Settings;
 
 import javax.swing.*;
+import java.awt.*;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
 
@@ -22,7 +23,7 @@ public class PrefsDialog extends JDialog implements WindowListener {
     private final JRadioButton preferMacMenuBar = new JRadioButton("macOS");
     private final JRadioButton preferInAppMenuBar = new JRadioButton("In-App");
 
-    public PrefsDialog() {
+    public PrefsDialog(Component parent) {
 
         setTitle("Preferences");
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
@@ -43,7 +44,7 @@ public class PrefsDialog extends JDialog implements WindowListener {
             createRadioRow("Menu bar style (requires restart):", null, preferMacMenuBar, preferInAppMenuBar);
 
         pack();
-        setLocationRelativeTo(null);
+        setLocationRelativeTo(parent);
         setVisible(true);
 
     }
