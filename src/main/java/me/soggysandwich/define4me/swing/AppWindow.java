@@ -216,54 +216,53 @@ public class AppWindow extends JFrame implements KeyListener {
 
     /** Try to define the given string using meetDeveloper's Dictionary API */
     private void tryToDefineWord(String word) throws IOException, ParseException {
+        try (InputStream inputStream = new URL("https://api.dictionaryapi.dev/api/v2/entries/en/" + word).openStream()) {
+            JSONArray jsonArray = (JSONArray) new JSONParser()
+                    .parse(getJSONText(new InputStreamReader(inputStream, StandardCharsets.UTF_8))); // Parse response
 
-        InputStream inputStream = new URL("https://api.dictionaryapi.dev/api/v2/entries/en/" + word).openStream();
-        JSONArray jsonArray = (JSONArray) new JSONParser()
-                .parse(getJSONText(new InputStreamReader(inputStream, StandardCharsets.UTF_8))); // Parse response
+            JSONObject jsonObject = (JSONObject) jsonArray.get(0);  // Get first use of word
+            jsonArray = (JSONArray) jsonObject.get("meanings");     // Get array of "meanings"
 
-        JSONObject jsonObject = (JSONObject) jsonArray.get(0);  // Get first use of word
-        jsonArray = (JSONArray) jsonObject.get("meanings");     // Get array of "meanings"
+            // If user prefers to choose between multiple definitions:
+            if (!Settings.prefersFirstDefinition() && jsonArray.size() > 1) {
 
-        // If user prefers to choose between multiple definitions:
-        if (!Settings.prefersFirstDefinition() && jsonArray.size() > 1) {
+                definitionsDlg.addMeaningsArrayFor(word, jsonArray); // Add this word and its definitions to definitionsDlg
 
-            definitionsDlg.addMeaningsArrayFor(word, jsonArray); // Add this word and its definitions to definitionsDlg
-
-        } else { // Else select first meaning and definition:
-            jsonObject = (JSONObject) jsonArray.get(0);             // Get first object of "meanings"
-            jsonArray = (JSONArray) jsonObject.get("definitions");  // Get array of definitions
-            jsonObject = (JSONObject) jsonArray.get(0);         // Get first definition object
-            definitions.put(word, jsonObject.get("definition").toString()); // Add to definitions
+            } else { // Else select first meaning and definition:
+                jsonObject = (JSONObject) jsonArray.get(0);             // Get first object of "meanings"
+                jsonArray = (JSONArray) jsonObject.get("definitions");  // Get array of definitions
+                jsonObject = (JSONObject) jsonArray.get(0);         // Get first definition object
+                definitions.put(word, jsonObject.get("definition").toString()); // Add to definitions
+            }
         }
-
     }
 
     /** Try to define the given string with the first sentence of a Wikipedia article with the same title */
-    private void tryGettingWikipediaSummary(String word) {
-        try {
-
-            InputStream inputStream = new URL("https://en.wikipedia.org/w/api.php?" + // Use wikipedia query API:
+    private void tryGettingWikipediaSummary(String w) {
+        try { // Use wikipedia query API:
+            try (InputStream inputStream = new URL("https://en.wikipedia.org/w/api.php?" +
                     "format=json&action=query&prop=extracts&exintro&explaintext&redirects=1&titles=" +
-                    /*Replace all spaces with %20 for link:*/word.replaceAll(" ", "%20")).openStream();
-            JSONObject jsonObject = (JSONObject) new JSONParser()
-                    .parse(getJSONText(new InputStreamReader(inputStream, StandardCharsets.UTF_8))); // Parse response
+                    /*Replace all spaces with %20 for link:*/w.replaceAll(" ", "%20")).openStream()) {
+                JSONObject jsonObject = (JSONObject) new JSONParser()
+                        .parse(getJSONText(new InputStreamReader(inputStream, StandardCharsets.UTF_8))); // Parse response
 
-            jsonObject = (JSONObject) jsonObject.get("query"); // Get query section
-            jsonObject = (JSONObject) jsonObject.get("pages"); // Get pages section
-            jsonObject = (JSONObject) jsonObject.get(jsonObject.keySet().iterator().next()); // Choose first page
+                jsonObject = (JSONObject) jsonObject.get("query"); // Get query section
+                jsonObject = (JSONObject) jsonObject.get("pages"); // Get pages section
+                jsonObject = (JSONObject) jsonObject.get(jsonObject.keySet().iterator().next()); // Choose first page
 
-            String text = jsonObject.get("extract").toString();
-            for (int i = 0; i < text.length() - 1; i++) { // Find the first period to cut everything after it
-                // Make sure the next char after this period is not a digit, to not cut off decimals/version numbers.
-                if (text.charAt(i) == '.' && !Character.isDigit(text.charAt(i + 1))) {
-                    text = text.substring(0, i + 1); // Cut text down to this first sentence
-                    break; // Leave this for-loop
+                String text = jsonObject.get("extract").toString();
+                for (int i = 0; i < text.length() - 1; i++) { // Find the first period to cut everything after it
+                    // Make sure the next char after this period is not a digit, to not cut off decimals/version numbers.
+                    if (text.charAt(i) == '.' && !Character.isDigit(text.charAt(i + 1))) {
+                        text = text.substring(0, i + 1); // Cut text down to this first sentence
+                        break; // Leave this for-loop
+                    }
                 }
+
+                definitions.put(w, text); // Put wikipedia summary as definition
+
             }
-
-            definitions.put(word, text); // Put wikipedia summary as definition
-
-        } catch (Exception ex) { System.out.println("No Wikipedia entry for " + word); }
+        } catch (Exception ex) { System.out.println("No Wikipedia entry for " + w); }
     }
 
     /** Gets contents from the clipboard as stringFlavor and parse it to put its words in the word list */
