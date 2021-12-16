@@ -9,7 +9,7 @@ import java.awt.event.KeyListener;
 
 public class Define4Me {
 
-    public static final String VERSION = "1.1-DEV";
+    public static final String VERSION = "1.1";
     private static boolean isMacOS;
 
     public static void main(String[] args) {
