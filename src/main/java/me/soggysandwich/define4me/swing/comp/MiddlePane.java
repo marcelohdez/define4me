@@ -132,7 +132,7 @@ public class MiddlePane extends JTabbedPane {
 
         if (!wordList.isSelectionEmpty()) {
             int index = wordList.getSelectedIndex();
-            EditWordDialog ewd = new EditWordDialog(words.get(index));
+            EditWordDialog ewd = new EditWordDialog(this, words.get(index));
             if (ewd.accepted()) {
                 removeSelectedWord(false);
                 replaceWordAt(index, ewd.getWord());

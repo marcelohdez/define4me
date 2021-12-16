@@ -74,14 +74,14 @@ public class AppWindow extends JFrame implements KeyListener {
 
         copyText.addActionListener((e) -> copy());
         pasteFromWordList.addActionListener((e) -> paste());
-        openAbout.addActionListener((e) -> new AboutDialog(middlePane.wordsAmount()));
-        openPrefs.addActionListener((e) -> new PrefsDialog());
+        openAbout.addActionListener((e) -> new AboutDialog(this, middlePane.wordsAmount()));
+        openPrefs.addActionListener((e) -> new PrefsDialog(this));
         editWord.addActionListener((e) -> middlePane.editSelectedWord());
         middlePane.getRemoveButton().addActionListener((e) -> removeSelectedWord());
 
         pasteButton.addActionListener((e) -> paste());
         middlePane.getAddButton().addActionListener((e -> {
-            AddWordDialog awd = new AddWordDialog();
+            AddWordDialog awd = new AddWordDialog(this);
             if (awd.accepted()) addWord(awd.getWord());
             awd.dispose();
         }));
@@ -121,52 +121,35 @@ public class AppWindow extends JFrame implements KeyListener {
      * @param reader given scanner
      */
     private void getWordsFrom(Scanner reader) {
+        try (reader) {
+            if (middlePane.wordsAmount() > 0)
+                if (new AcceptDialog(this, """
+                        Would you like to clear your
+                        current list of words or add
+                        to them?""", "Clear", "Add")
+                        .accepted())
+                    middlePane.clear();
 
-        if (middlePane.wordsAmount() > 0)
-            if (new AcceptDialog("""
-                    Would you like to clear your
-                    current list of words or add
-                    to them?""", "Clear", "Add")
-                    .accepted())
-                middlePane.clear();
+            while (reader.hasNextLine()) {
+                String word = WordParser.parseString(reader.nextLine());
+                if (!word.isEmpty()) addWord(word); // If parsed characters are not empty then add word
+            }
 
-        while (reader.hasNextLine()) {
-            String word = WordParser.parseString(reader.nextLine());
-            if (!word.isEmpty()) addWord(word); // If parsed characters are not empty then add word
+            middlePane.setSelectedIndex(0); // Switch back to words tab
         }
-
     }
 
     private String defineWords() {
 
         definitions.clear(); // Reset definitions
-        if (!Settings.prefersFirstDefinition()) definitionsDlg = new DefinitionsDialog();
+        if (!Settings.prefersFirstDefinition()) definitionsDlg = new DefinitionsDialog(this);
 
         // create a thread pool the size of how many we will use, ideally one per word, but if that's more than
         // the amount of cores available then stop at that number. (also 16 is ConcurrentHashMap's concurrent limit)
         Thread[] threadList = new Thread[
                 Math.min(Runtime.getRuntime().availableProcessors(), Math.min(middlePane.wordsAmount(), 16)) ];
 
-        for (int i = 0; i < threadList.length; i++) { // Create a new thread for every open spot in threadList
-            int threadNumber = i; // Local value to pass to thread's for loop.
-
-            threadList[i] = new Thread(() -> {
-                for (int w = threadNumber; w < middlePane.wordsAmount(); w++) { // Start on our thread number, and get words 1 by 1
-                    if (!definitions.containsKey(middlePane.getWordAt(w))) { // If the current word has not been defined yet
-                        // Default text + having a key marks this word as defined to other threads
-                        definitions.put(middlePane.getWordAt(w), "No definition found");
-                        try {
-                            getDefinitionOf(middlePane.getWordAt(w));
-                        } catch (Exception e) {
-                            System.out.println("Couldn't find a definition for $w!"
-                                    .replace("$w", middlePane.getWordAt(w)));
-                        }
-                    }
-                }
-            });
-            threadList[i].start(); // Start thread
-
-        }
+        summonDefineThreads(threadList);
 
         for (Thread t : threadList) { // Wait for all threads to finish.
             try {
@@ -188,58 +171,119 @@ public class AppWindow extends JFrame implements KeyListener {
 
     }
 
+    /** Summon threads into given array where each thread will attempt to define a word */
+    private void summonDefineThreads(Thread[] t) {
+
+        for (int i = 0; i < t.length; i++) { // Create a new thread for every open spot in threadList
+
+            int threadNumber = i; // Local value to pass to thread's for loop.
+            t[i] = new Thread(() -> {
+                // Start on our thread number, and get words 1 by 1
+                for (int w = threadNumber; w < middlePane.wordsAmount(); w++) defineIndex(w);
+            });
+
+            t[i].start(); // Start thread
+        }
+
+    }
+
+    private void defineIndex(int index) {
+
+        String word = middlePane.getWordAt(index);
+        if (!definitions.containsKey(word)) { // If the current word has not been defined yet
+            // Default text + having a key marks this word as defined to other threads
+            definitions.put(word, "No definition found");
+            try {
+                tryToDefineWord(word);
+            } catch (Exception e) {
+                System.out.println("No dictionary definition for " + word);
+                if (Settings.acceptsWikipediaSummary()) tryGettingWikipediaSummary(word);
+            }
+        }
+
+    }
+
     private String getJSONText(Reader r) throws IOException {
-
-        StringBuilder sb = new StringBuilder();
-        int c; // Current character
-        while ((c = r.read()) != -1) {
-            sb.append((char) c);
+        try (r) {
+            StringBuilder sb = new StringBuilder();
+            int c; // Current character
+            while ((c = r.read()) != -1) {
+                sb.append((char) c);
+            }
+            return sb.toString();
         }
-        return sb.toString();
-
     }
 
-    private void getDefinitionOf(String word) throws IOException, ParseException {
+    /** Try to define the given string using meetDeveloper's Dictionary API */
+    private void tryToDefineWord(String word) throws IOException, ParseException {
+        try (var stream = new URL("https://api.dictionaryapi.dev/api/v2/entries/en/" + word).openStream()) {
+            JSONArray jsonArray = (JSONArray) new JSONParser()
+                    .parse(getJSONText(new InputStreamReader(stream, StandardCharsets.UTF_8))); // Parse response
 
-        JSONParser parser = new JSONParser();
-        InputStream urlStream = new URL("https://api.dictionaryapi.dev/api/v2/entries/en/" + word).openStream();
-        BufferedReader reader = new BufferedReader(new InputStreamReader(urlStream, StandardCharsets.UTF_8));
-        String jsonText = getJSONText(reader);
+            JSONObject jsonObject = (JSONObject) jsonArray.get(0);  // Get first use of word
+            jsonArray = (JSONArray) jsonObject.get("meanings");     // Get array of "meanings"
 
-        JSONArray jsonArray = (JSONArray) parser.parse(jsonText); // Get all of json
-        JSONObject jsonObject = (JSONObject) jsonArray.get(0);  // Get first use of word
-        jsonArray = (JSONArray) jsonObject.get("meanings");     // Get array of "meanings"
+            // If user prefers to choose between multiple definitions:
+            if (!Settings.prefersFirstDefinition() && jsonArray.size() > 1) {
 
-        // If user prefers to choose between multiple definitions:
-        if (!Settings.prefersFirstDefinition() && jsonArray.size() > 1) {
+                definitionsDlg.addMeaningsArrayFor(word, jsonArray); // Add this word and its definitions to definitionsDlg
 
-            definitionsDlg.addMeaningsArrayFor(word, jsonArray); // Add this word and its definitions to definitionsDlg
-
-        } else { // Else select first meaning and definition:
-            jsonObject = (JSONObject) jsonArray.get(0);             // Get first object of "meanings"
-            jsonArray = (JSONArray) jsonObject.get("definitions");  // Get array of definitions
-            jsonObject = (JSONObject) jsonArray.get(0);         // Get first definition object
-            definitions.put(word, jsonObject.get("definition").toString()); // Add to definitions
+            } else { // Else select first meaning and definition:
+                jsonObject = (JSONObject) jsonArray.get(0);             // Get first object of "meanings"
+                jsonArray = (JSONArray) jsonObject.get("definitions");  // Get array of definitions
+                jsonObject = (JSONObject) jsonArray.get(0);         // Get first definition object
+                definitions.put(word, jsonObject.get("definition").toString()); // Add to definitions
+            }
         }
-
     }
 
+    /** Try to define the given string with the first sentence of a Wikipedia article with the same title */
+    private void tryGettingWikipediaSummary(String w) {
+        try { // Use wikipedia query API:
+            try (var stream = new URL("https://en.wikipedia.org/w/api.php?format=json&action=query" +
+                    "&prop=extracts&exintro&explaintext&redirects=1&titles=" + /*Replace all spaces with %20 for link:*/
+                    w.replaceAll(" ", "%20")).openStream()) {
+
+                JSONObject jsonObject = (JSONObject) new JSONParser()
+                        .parse(getJSONText(new InputStreamReader(stream, StandardCharsets.UTF_8))); // Parse response
+
+                jsonObject = (JSONObject) jsonObject.get("query"); // Get query section
+                jsonObject = (JSONObject) jsonObject.get("pages"); // Get pages section
+                jsonObject = (JSONObject) jsonObject.get(jsonObject.keySet().iterator().next()); // Choose first page
+
+                String text = jsonObject.get("extract").toString();
+                for (int i = 0; i < text.length() - 1; i++) { // Find the first period to cut everything after it
+                    // Make sure the next char after this period is not a digit, to not cut off decimals/version numbers.
+                    if (text.charAt(i) == '.' && !Character.isDigit(text.charAt(i + 1))) {
+                        text = text.substring(0, i + 1); // Cut text down to this first sentence
+                        break; // Leave this for-loop
+                    }
+                }
+
+                definitions.put(w, text); // Put wikipedia summary as definition
+
+            }
+        } catch (Exception ex) { System.out.println("No Wikipedia entry for " + w); }
+    }
+
+    /** Gets contents from the clipboard as stringFlavor and parse it to put its words in the word list */
     private void paste() {
         try {
-            String pastedText = (String) Toolkit.getDefaultToolkit().getSystemClipboard().getData(DataFlavor.stringFlavor);
+            String pastedText = Toolkit.getDefaultToolkit().getSystemClipboard()
+                    .getData(DataFlavor.stringFlavor).toString();
             getWordsFrom(new Scanner(pastedText));
-            middlePane.setSelectedIndex(0); // Switch back to words tab
         } catch (IOException | UnsupportedFlavorException ex) {
             System.out.println("Unable to paste from clipboard! Stack trace:");
             ex.printStackTrace();
         }
     }
 
+    /** Copies the contents of the middlePane's text area into the user's clipboard */
     private void copy() {
         StringSelection text;
         if (middlePane.getSelectedText() != null) { // If there is something selected get that text:
             text = new StringSelection(middlePane.getSelectedText());
-        } else {    // Else just get the whole text area's contents
+        } else { // Else just get the whole text area's contents
             text = new StringSelection(middlePane.getText());
         }
 

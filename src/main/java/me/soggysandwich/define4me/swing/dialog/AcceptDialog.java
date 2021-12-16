@@ -11,9 +11,11 @@ public class AcceptDialog extends JDialog implements ActionListener {
 
     private boolean accepted = false;
 
+    private final Component parent;
     private final JButton acceptButton;
 
-    public AcceptDialog(String text, String acceptButtonText, String cancelButtonText) {
+    public AcceptDialog(Component parent, String text, String acceptButtonText, String cancelButtonText) {
+        this.parent = parent;
 
         setTitle("Alert");
         setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
@@ -43,7 +45,7 @@ public class AcceptDialog extends JDialog implements ActionListener {
     }
 
     public boolean accepted() {
-        setLocationRelativeTo(null);
+        setLocationRelativeTo(parent);
         setVisible(true);
 
         return accepted;

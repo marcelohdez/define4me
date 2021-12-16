@@ -14,10 +14,12 @@ public class AddWordDialog extends JDialog implements ActionListener, KeyListene
 
     private boolean accepted = false;
 
+    private final Component parent;
     protected final JTextField textField = new JTextField();
     private final JButton acceptButton = new JButton("Accept");
 
-    public AddWordDialog() {
+    public AddWordDialog(Component parent) {
+        this.parent = parent;
 
         setTitle("Add Word");
         setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
@@ -42,7 +44,7 @@ public class AddWordDialog extends JDialog implements ActionListener, KeyListene
     }
 
     public boolean accepted() {
-        setLocationRelativeTo(null);
+        setLocationRelativeTo(parent);
         setVisible(true);
         return accepted;
     }
