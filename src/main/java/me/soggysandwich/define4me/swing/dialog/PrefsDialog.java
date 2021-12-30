@@ -17,8 +17,7 @@ public class PrefsDialog extends JDialog implements WindowListener {
     private final JRadioButton preferFirstDefinition = new JRadioButton("First");
     private final JRadioButton preferToAskDefinition = new JRadioButton("Ask If Multiple");
     // Wikipedia summary preference
-    private final JRadioButton acceptWikipediaSummary = new JRadioButton("Use");
-    private final JRadioButton declineWikipediaSummary = new JRadioButton("Do not use");
+    private final JCheckBox useWikipedia = new JCheckBox("Use Wikipedia");
     // Mac menu bar preference
     private final JRadioButton preferMacMenuBar = new JRadioButton("macOS");
     private final JRadioButton preferInAppMenuBar = new JRadioButton("In-App");
@@ -33,15 +32,17 @@ public class PrefsDialog extends JDialog implements WindowListener {
         addWindowListener(this);
         setLayout(new BoxLayout(getContentPane(), BoxLayout.Y_AXIS));
         initComps();
-        createRadioRow("Definition choice:", null,
-                preferFirstDefinition, preferToAskDefinition);
-        createRadioRow("Use Wikipedia:",
-                "If enabled, when no definition is found for the given word,<br>" +
-                        "Define4Me will try to use the summary of a wikipedia page<br>" +
-                        "with the same title instead.",
-                acceptWikipediaSummary, declineWikipediaSummary);
+        createRadioRow("Definition choice:", preferFirstDefinition, preferToAskDefinition);
+        // Add Wikipedia preference checkbox:
+        useWikipedia.setToolTipText("<html>Use the first sentence of a Wikipedia article<br>" +
+                "with the same title of a word if a dictionary<br>" +
+                "definition is not found</html>");
+        JPanel pnl = new JPanel();
+        pnl.add(useWikipedia);
+        add(pnl);
+        // Add Menu bar option if available:
         if (System.getProperty("os.name").equals("Mac OS X"))
-            createRadioRow("Menu bar style (requires restart):", null, preferMacMenuBar, preferInAppMenuBar);
+            createRadioRow("Menu bar style (requires restart):", preferMacMenuBar, preferInAppMenuBar);
 
         pack();
         setLocationRelativeTo(parent);
@@ -54,26 +55,23 @@ public class PrefsDialog extends JDialog implements WindowListener {
         // Definition choice
         preferFirstDefinition.setSelected(Settings.prefersFirstDefinition());
         preferToAskDefinition.setSelected(!preferFirstDefinition.isSelected());
-        // Wikipedia summary choice
-        acceptWikipediaSummary.setSelected(Settings.acceptsWikipediaSummary());
-        declineWikipediaSummary.setSelected(!acceptWikipediaSummary.isSelected());
+        // Wikipedia preference
+        useWikipedia.setSelected(Settings.acceptsWikipediaSummary());
         // Mac menu bar choice
         preferMacMenuBar.setSelected(Settings.prefersMacMenuBar());
         preferInAppMenuBar.setSelected(!preferMacMenuBar.isSelected());
 
         // Set hand cursor for radio buttons
-        Define4Me.initButtons(null, preferFirstDefinition, preferToAskDefinition, acceptWikipediaSummary,
-                declineWikipediaSummary, preferInAppMenuBar);
+        Define4Me.initButtons(null, preferFirstDefinition, preferToAskDefinition, useWikipedia, preferInAppMenuBar);
 
     }
 
-    private void createRadioRow(String labelText, String labelToolTip, JRadioButton... buttons) {
+    private void createRadioRow(String labelText, JRadioButton... buttons) {
 
         JPanel pnl = new JPanel();
         ButtonGroup group = new ButtonGroup(); // Only one radio button can be activated per group
 
         JLabel label = new JLabel(labelText);
-        if (labelToolTip != null) label.setToolTipText("<html>" + labelToolTip + "</html>");
         pnl.add(label);
         for (JRadioButton button : buttons) {
             group.add(button);
@@ -88,7 +86,7 @@ public class PrefsDialog extends JDialog implements WindowListener {
     public void windowClosing(WindowEvent e) {
 
         Settings.setDefinitionPreference(preferFirstDefinition.isSelected());
-        Settings.setWikipediaSummaryPreference(acceptWikipediaSummary.isSelected());
+        Settings.setWikipediaSummaryPreference(useWikipedia.isSelected());
         Settings.setMacMenuBarPreference(preferMacMenuBar.isSelected());
 
     }
