@@ -8,9 +8,7 @@ import java.awt.*;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
 
-/**
- * JDialog with preferences to certain aspects of the program
- */
+/* JDialog with preferences to certain aspects of the program */
 public class PrefsDialog extends JDialog implements WindowListener {
 
     // Definition preference
@@ -41,7 +39,7 @@ public class PrefsDialog extends JDialog implements WindowListener {
         pnl.add(useWikipedia);
         add(pnl);
         // Add Menu bar option if available:
-        if (System.getProperty("os.name").equals("Mac OS X"))
+        if (Define4Me.isOnMacOS())
             createRadioRow("Menu bar style (requires restart):", preferMacMenuBar, preferInAppMenuBar);
 
         pack();

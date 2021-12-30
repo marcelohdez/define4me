@@ -10,7 +10,7 @@ import java.awt.event.KeyListener;
 public class Define4Me {
 
     public static final String VERSION = "1.2-DEV";
-    private static boolean isMacOS;
+    private static boolean isOnMacOS;
 
     public static void main(String[] args) {
         // Try to get the system's look and feel and set to it
@@ -23,7 +23,7 @@ public class Define4Me {
         }
         // If we are on macOS, enable use of the menu bar at the top of the screen (if enabled in settings)
         if (System.getProperty("os.name").equals("Mac OS X")) {
-            isMacOS = true;
+            isOnMacOS = true;
             if (Settings.prefersMacMenuBar()) System.setProperty("apple.laf.useScreenMenuBar", "true");
         }
 
@@ -40,8 +40,12 @@ public class Define4Me {
         for (AbstractButton b : buttons) {
             if (kl != null) b.addKeyListener(kl);
             b.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-            if (!isMacOS && b instanceof JButton) b.setMargin(new Insets(6, 12, 6, 12));
+            if (!isOnMacOS && b instanceof JButton) b.setMargin(new Insets(6, 12, 6, 12));
         }
+    }
+
+    public static boolean isOnMacOS() {
+        return isOnMacOS;
     }
 
 }
