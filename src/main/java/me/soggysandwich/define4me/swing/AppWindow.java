@@ -20,6 +20,7 @@ import java.awt.event.KeyListener;
 import java.io.*;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.util.Objects;
 import java.util.Scanner;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -122,13 +123,20 @@ public class AppWindow extends JFrame implements KeyListener {
      */
     private void getWordsFrom(Scanner reader) {
         try (reader) {
-            if (middlePane.wordsAmount() > 0)
-                if (new AcceptDialog(this, """
-                        Would you like to clear your
-                        current list of words or add
-                        to them?""", "Clear", "Add")
-                        .accepted())
+            if (middlePane.wordsAmount() > 0) {
+                String chosen = new ChoiceDialog(this, "Paste",
+                    """
+                    What would you like to do with
+                    your existing words?""",
+                        "Clear", "Add pasted")
+                        .response();
+
+                if (Objects.equals(chosen, "Cancel")) {
+                    return; // Do not do anything
+                } else if (Objects.equals(chosen, "Clear")) {
                     middlePane.clear();
+                } // If we chose to add the words then just go ahead:
+            }
 
             while (reader.hasNextLine()) {
                 String word = WordParser.parseString(reader.nextLine());
