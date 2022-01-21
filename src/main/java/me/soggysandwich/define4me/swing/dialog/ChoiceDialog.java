@@ -1,5 +1,7 @@
 package me.soggysandwich.define4me.swing.dialog;
 
+import me.soggysandwich.define4me.Define4Me;
+
 import javax.swing.*;
 import java.awt.*;
 
@@ -32,6 +34,7 @@ public class ChoiceDialog extends JDialog {
 
     private void addButtonTo(JPanel to, String buttonText) {
         JButton button = new JButton(buttonText);
+        Define4Me.initButtons(null, button);
         button.addActionListener(e -> {
             response = buttonText;
             setVisible(false);
