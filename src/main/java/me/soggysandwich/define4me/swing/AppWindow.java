@@ -31,7 +31,7 @@ public class AppWindow extends JFrame implements KeyListener {
 
     // Menu bar stuffs: File menu
     private final JMenuBar menuBar = new JMenuBar();
-    private final JMenu fileMenu = new JMenu("File");
+    private final JMenu fileMenu = new JMenu("Program");
     private final JMenuItem openAbout = new JMenuItem("About");
     private final JMenuItem openPrefs = new JMenuItem("Preferences");
 
