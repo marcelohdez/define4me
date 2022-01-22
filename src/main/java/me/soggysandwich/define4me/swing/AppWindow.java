@@ -49,6 +49,7 @@ public class AppWindow extends JFrame implements KeyListener {
     private final JButton defineButton = new JButton("Define");
 
     private int keyBeingPressed; // Keep track of key being pressed, for ctrl/cmd + (something) shortcuts
+    private SwingWorker<String, Float> worker; // Worker to do work in background thread(s)
 
     public AppWindow() {
 
@@ -70,7 +71,7 @@ public class AppWindow extends JFrame implements KeyListener {
 
     }
 
-    // Initialize components
+    /** Initialize components */
     private void initComps() {
 
         copyText.addActionListener((e) -> copy());
@@ -86,12 +87,7 @@ public class AppWindow extends JFrame implements KeyListener {
             if (awd.accepted()) addWord(awd.getWord());
             awd.dispose();
         }));
-        defineButton.addActionListener((e) -> {
-            this.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR)); // Set loading cursor
-            middlePane.setStatusText(defineWords());
-            middlePane.setSelectedIndex(1); // Switch to definitions tab
-            this.setCursor(Cursor.getDefaultCursor()); // Remove loading cursor
-        });
+        defineButton.addActionListener((e) -> startWorker());
 
         defineButton.setEnabled(false); // Disable define button until we have words to define
         Define4Me.initButtons(this, pasteButton, defineButton, openAbout, openPrefs, copyText, editWord,
@@ -106,14 +102,46 @@ public class AppWindow extends JFrame implements KeyListener {
 
     }
 
+    /** Make worker execute if it is currently pending */
+    private void startWorker() {
+        if (isWorkerAvailable()) {
+            setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR)); // Set loading cursor
+
+            worker = new SwingWorker<>() {
+                String resultText;
+
+                @Override
+                protected String doInBackground() {
+                    resultText = defineWords();
+                    return resultText;
+                }
+
+                @Override
+                protected void done() {
+                    middlePane.setStatusText(resultText);
+                    setCursor(Cursor.getDefaultCursor());
+                    worker = null; // Make worker "available" again
+                }
+            };
+
+            worker.execute();
+        }
+    }
+
     private void removeSelectedWord() {
-        if (middlePane.removeSelectedWord(true))
-            defineButton.setEnabled(middlePane.wordsAmount() > 0);
+        if (isWorkerAvailable() && middlePane.removeSelectedWord(true)) {
+            defineButton.setEnabled(middlePane.wordsAmount() > 0); // Enable define button if there are words in list
+        }
     }
 
     private void addWord(String word) {
-        if (middlePane.addWord(word))
-            defineButton.setEnabled(middlePane.wordsAmount() > 0);
+        if (isWorkerAvailable() && middlePane.addWord(word)) {
+            defineButton.setEnabled(middlePane.wordsAmount() > 0); // Enable define button if there are words in list
+        }
+    }
+
+    public boolean isWorkerAvailable() {
+        return worker == null;
     }
 
     /**
@@ -276,13 +304,17 @@ public class AppWindow extends JFrame implements KeyListener {
 
     /** Gets contents from the clipboard as stringFlavor and parse it to put its words in the word list */
     private void paste() {
-        try {
-            String pastedText = Toolkit.getDefaultToolkit().getSystemClipboard()
-                    .getData(DataFlavor.stringFlavor).toString();
-            getWordsFrom(new Scanner(pastedText));
-        } catch (IOException | UnsupportedFlavorException ex) {
-            System.out.println("Unable to paste from clipboard! Stack trace:");
-            ex.printStackTrace();
+        if (isWorkerAvailable()) {
+
+            try {
+                String pastedText = Toolkit.getDefaultToolkit().getSystemClipboard()
+                        .getData(DataFlavor.stringFlavor).toString();
+                getWordsFrom(new Scanner(pastedText));
+            } catch (IOException | UnsupportedFlavorException ex) {
+                System.out.println("Unable to paste from clipboard! Stack trace:");
+                ex.printStackTrace();
+            }
+
         }
     }
 

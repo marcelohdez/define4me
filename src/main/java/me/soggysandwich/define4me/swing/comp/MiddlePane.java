@@ -18,12 +18,9 @@ public class MiddlePane extends JTabbedPane {
     private final JButton addButton = new JButton("Add");
     private final DefaultListModel<String> words = new DefaultListModel<>();
     private final JList<String> wordList = new JList<>(words);
-    private final JTextArea statusText = new JTextArea("""
-            No words have been defined yet.
-            """);
+    private final JTextArea statusText = new JTextArea("No words have been defined yet.");
 
-    public MiddlePane(AppWindow app, JPopupMenu wordsMenu, JPopupMenu textMenu,
-                      KeyListener kl) {
+    public MiddlePane(AppWindow app, JPopupMenu wordsMenu, JPopupMenu textMenu, KeyListener kl) {
         addTab("Words", createListAndButtonsPanel());
         addTab("Definitions", new JScrollPane(statusText));
 
@@ -145,6 +142,7 @@ public class MiddlePane extends JTabbedPane {
 
     public void setStatusText(String t) {
         statusText.setText(t);
+        setSelectedIndex(1); // Switch to definitions tab to show new text
     }
 
     public String getText() {
