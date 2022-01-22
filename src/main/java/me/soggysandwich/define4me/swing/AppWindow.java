@@ -83,9 +83,8 @@ public class AppWindow extends JFrame implements KeyListener {
 
         pasteButton.addActionListener((e) -> paste());
         middlePane.getAddButton().addActionListener((e -> {
-            AddWordDialog awd = new AddWordDialog(this);
-            if (awd.accepted()) addWord(awd.getWord());
-            awd.dispose();
+            String addition = new AddWordDialog(this).getWord();
+            if (!addition.isEmpty()) addWord(addition);
         }));
         defineButton.addActionListener((e) -> startWorker());
 

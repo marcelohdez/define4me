@@ -129,13 +129,12 @@ public class MiddlePane extends JTabbedPane {
 
         if (!wordList.isSelectionEmpty()) {
             int index = wordList.getSelectedIndex();
-            EditWordDialog ewd = new EditWordDialog(this, words.get(index));
-            if (ewd.accepted()) {
+            String newWord = new EditWordDialog(this, words.get(index)).getWord();
+            if (!newWord.isEmpty()) {
                 removeSelectedWord(false);
-                replaceWordAt(index, ewd.getWord());
+                replaceWordAt(index, newWord);
                 wordList.setSelectedIndex(index);
             }
-            ewd.dispose();
         }
 
     }
