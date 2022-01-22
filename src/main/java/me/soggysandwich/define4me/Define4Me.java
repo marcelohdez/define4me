@@ -13,13 +13,11 @@ public class Define4Me {
     private static boolean isOnMacOS;
 
     public static void main(String[] args) {
-        // Try to get the system's look and feel and set to it
+        // Set look and feel:
         try {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
         } catch (Exception e) {
-            try { // If it failed, try to set cross-platform look and feel
-                UIManager.setLookAndFeel(UIManager.getCrossPlatformLookAndFeelClassName());
-            } catch (Exception i) { i.printStackTrace(); } // Print error if no look and feel is available
+            e.printStackTrace(); // Print error if no look and feel is available
         }
         // If we are on macOS, enable use of the menu bar at the top of the screen (if enabled in settings)
         if (System.getProperty("os.name").equals("Mac OS X")) {
