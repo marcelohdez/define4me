@@ -26,6 +26,11 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class AppWindow extends JFrame implements KeyListener {
 
+    // Links to use when searching for definitions/descriptions
+    private static final String DICT_QUERY = "https://api.dictionaryapi.dev/api/v2/entries/en/";
+    private static final String WIKI_QUERY =
+            "https://en.wikipedia.org/w/api.php?format=json&action=query&prop=extracts&exintro&explaintext&redirects=1&titles=";
+
     private DefinitionsDialog definitionsDlg; // Dialog to choose definitions from if enabled in preferences
     private final ConcurrentHashMap<String, String> definitions = new ConcurrentHashMap<>(); // Word definitions
 
@@ -175,27 +180,14 @@ public class AppWindow extends JFrame implements KeyListener {
     }
 
     private String defineWords() {
-
         definitions.clear(); // Reset definitions
         if (!Settings.prefersFirstDefinition()) definitionsDlg = new DefinitionsDialog(this);
+        summonDefineThreads();
 
-        // create a thread pool the size of how many we will use, ideally one per word, but if that's more than
-        // the amount of cores available then stop at that number. (also 16 is ConcurrentHashMap's concurrent limit)
-        Thread[] threadList = new Thread[
-                Math.min(Runtime.getRuntime().availableProcessors(), Math.min(middlePane.wordsAmount(), 16)) ];
-
-        summonDefineThreads(threadList);
-
-        for (Thread t : threadList) { // Wait for all threads to finish.
-            try {
-                t.join();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
+        // If enabled and having words with multiple definitions, show chooser dialog:
+        if (!Settings.prefersFirstDefinition() && definitionsDlg.wordsToShow() > 0) {
+            definitions.putAll(definitionsDlg.getWantedDefinitions());
         }
-
-        if (!Settings.prefersFirstDefinition()) // If enabled and having words to choose for, show dialog to select definitions:
-            if (definitionsDlg.wordsToShow() > 0) definitions.putAll(definitionsDlg.getWantedDefinitions());
 
         StringBuilder sb = new StringBuilder();
         for (String word : middlePane.getList()) { // Append all definitions to separate lines
@@ -203,28 +195,37 @@ public class AppWindow extends JFrame implements KeyListener {
         }
 
         return sb.toString();
-
     }
 
-    /** Summon threads into given array where each thread will attempt to define a word */
-    private void summonDefineThreads(Thread[] t) {
+    /** Creates an array of threads for each to define a word */
+    private void summonDefineThreads() {
+        // create a thread pool the size of how many we will use, ideally one per word, but if that's more than
+        // the amount of cores available then stop at that number. (also 16 is ConcurrentHashMap's concurrent limit)
+        Thread[] ts = new Thread[ Math.min(Runtime.getRuntime().availableProcessors(),
+                Math.min(middlePane.wordsAmount(), 16)) ];
+        // Create threads:
+        for (int i = 0; i < ts.length; i++) {
+            int num = i; // Local value to pass to thread's for-loop.
 
-        for (int i = 0; i < t.length; i++) { // Create a new thread for every open spot in threadList
-
-            int threadNumber = i; // Local value to pass to thread's for loop.
-            t[i] = new Thread(() -> {
+            ts[i] = new Thread(() -> {
                 // Start on our thread number, and get words 1 by 1
-                for (int w = threadNumber; w < middlePane.wordsAmount(); w++) defineIndex(w);
+                for (int w = num; w < middlePane.wordsAmount(); w++) defineIndex(w);
             });
-
-            t[i].start(); // Start thread
+            ts[i].start();
         }
-
+        // Wait for all threads to finish.
+        for (Thread thread : ts) {
+            try {
+                thread.join();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     private void defineIndex(int index) {
-
         String word = middlePane.getWordAt(index);
+
         if (!definitions.containsKey(word)) { // If the current word has not been defined yet
             // Default text + having a key marks this word as defined to other threads
             definitions.put(word, "No definition found");
@@ -235,26 +236,13 @@ public class AppWindow extends JFrame implements KeyListener {
                 if (Settings.acceptsWikipediaSummary()) tryGettingWikipediaSummary(word);
             }
         }
-
-    }
-
-    private String getJSONText(Reader r) throws IOException {
-        try (r) {
-            StringBuilder sb = new StringBuilder();
-            int c; // Current character
-            while ((c = r.read()) != -1) {
-                sb.append((char) c);
-            }
-            return sb.toString();
-        }
     }
 
     /** Try to define the given string using meetDeveloper's Dictionary API */
     private void tryToDefineWord(String word) throws IOException, ParseException {
-        try (var stream = new URL("https://api.dictionaryapi.dev/api/v2/entries/en/" + word).openStream()) {
-            JSONArray jsonArray = (JSONArray) new JSONParser()
-                    .parse(getJSONText(new InputStreamReader(stream, StandardCharsets.UTF_8))); // Parse response
+        try (var stream = new URL(DICT_QUERY + word).openStream()) {
 
+            JSONArray jsonArray = (JSONArray) parseStream(stream); // Parse response
             JSONObject jsonObject = (JSONObject) jsonArray.get(0);  // Get first use of word
             jsonArray = (JSONArray) jsonObject.get("meanings");     // Get array of "meanings"
 
@@ -274,31 +262,38 @@ public class AppWindow extends JFrame implements KeyListener {
 
     /** Try to define the given string with the first sentence of a Wikipedia article with the same title */
     private void tryGettingWikipediaSummary(String w) {
-        try { // Use wikipedia query API:
-            try (var stream = new URL("https://en.wikipedia.org/w/api.php?format=json&action=query" +
-                    "&prop=extracts&exintro&explaintext&redirects=1&titles=" + /*Replace all spaces with %20 for link:*/
-                    w.replaceAll(" ", "%20")).openStream()) {
+        // Use the wikipedia query: also change all spaces to %20 for link to work
+        try (var stream = new URL(WIKI_QUERY + w.replaceAll(" ", "%20"))
+                .openStream()) {
 
-                JSONObject jsonObject = (JSONObject) new JSONParser()
-                        .parse(getJSONText(new InputStreamReader(stream, StandardCharsets.UTF_8))); // Parse response
+            JSONObject jsonObject = (JSONObject) parseStream(stream); // Parse response
+            jsonObject = (JSONObject) jsonObject.get("query"); // Get query section
+            jsonObject = (JSONObject) jsonObject.get("pages"); // Get pages section
+            jsonObject = (JSONObject) jsonObject.get(jsonObject.keySet().iterator().next()); // Choose first page
 
-                jsonObject = (JSONObject) jsonObject.get("query"); // Get query section
-                jsonObject = (JSONObject) jsonObject.get("pages"); // Get pages section
-                jsonObject = (JSONObject) jsonObject.get(jsonObject.keySet().iterator().next()); // Choose first page
-
-                String text = jsonObject.get("extract").toString();
-                for (int i = 0; i < text.length() - 1; i++) { // Find the first period to cut everything after it
-                    // Make sure the next char after this period is not a digit, to not cut off decimals/version numbers.
-                    if (text.charAt(i) == '.' && !Character.isDigit(text.charAt(i + 1))) {
-                        text = text.substring(0, i + 1); // Cut text down to this first sentence
-                        break; // Leave this for-loop
-                    }
+            String text = jsonObject.get("extract").toString();
+            for (int i = 0; i < text.length() - 1; i++) { // Find the first period to cut everything after it
+                // Make sure the next char after this period is not a digit, to not cut off decimals/version numbers.
+                if (text.charAt(i) == '.' && !Character.isDigit(text.charAt(i + 1))) {
+                    text = text.substring(0, i + 1); // Cut text down to this first sentence
+                    break; // Leave this for-loop
                 }
-
-                definitions.put(w, text); // Put wikipedia summary as definition
-
             }
+
+            definitions.put(w, text); // Put wikipedia summary as definition
         } catch (Exception ex) { System.out.println("No Wikipedia entry for " + w); }
+    }
+
+    private Object parseStream(InputStream stream) throws IOException, ParseException {
+        try (var reader = new InputStreamReader(stream, StandardCharsets.UTF_8)) {
+            StringBuilder sb = new StringBuilder();
+            int c; // Current character
+            while ((c = reader.read()) != -1) {
+                sb.append((char) c);
+            }
+
+            return new JSONParser().parse(sb.toString());
+        }
     }
 
     /** Gets contents from the clipboard as stringFlavor and parse it to put its words in the word list */
