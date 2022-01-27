@@ -23,6 +23,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 import java.util.Scanner;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class AppWindow extends JFrame implements KeyListener {
 
@@ -32,7 +33,7 @@ public class AppWindow extends JFrame implements KeyListener {
             "https://en.wikipedia.org/w/api.php?format=json&action=query&prop=extracts&exintro&explaintext&redirects=1&titles=";
 
     private DefinitionsDialog definitionsDlg; // Dialog to choose definitions from if enabled in preferences
-    private final ConcurrentHashMap<String, String> definitions = new ConcurrentHashMap<>(); // Word definitions
+    private final ConcurrentHashMap<String, String> definitionsMap = new ConcurrentHashMap<>(); // Word definitions
 
     // Menu bar stuffs: File menu
     private final JMenuBar menuBar = new JMenuBar();
@@ -52,9 +53,12 @@ public class AppWindow extends JFrame implements KeyListener {
     private final JButton pasteButton = new JButton("Paste");
     private final MiddlePane middlePane = new MiddlePane(this, rightClickWords, rightClickText, this); // Center tabbed pane
     private final JButton defineButton = new JButton("Define");
+    private final JProgressBar progressBar = new JProgressBar(0, 100);
 
+    // Other
     private int keyBeingPressed; // Keep track of key being pressed, for ctrl/cmd + (something) shortcuts
     private SwingWorker<String, Float> worker; // Worker to do work in background thread(s)
+    private final AtomicInteger finishedWordsAmount = new AtomicInteger(); // Keep count of defined words for progress bar
 
     public AppWindow() {
 
@@ -66,6 +70,7 @@ public class AppWindow extends JFrame implements KeyListener {
         add(pasteButton, BorderLayout.WEST);
         add(middlePane, BorderLayout.CENTER);
         add(defineButton, BorderLayout.EAST);
+        add(progressBar, BorderLayout.SOUTH);
 
         initComps();
 
@@ -116,17 +121,27 @@ public class AppWindow extends JFrame implements KeyListener {
 
                 @Override
                 protected String doInBackground() {
-                    resultText = defineWords();
+                    resultText = defineWords(() -> setProgress(
+                            (int) (finishedWordsAmount.intValue() / (float) middlePane.getList().size())
+                    ));
                     return resultText;
                 }
 
                 @Override
                 protected void done() {
                     middlePane.setStatusText(resultText);
+                    progressBar.setValue(0);
+                    progressBar.setToolTipText("Done");
                     setCursor(Cursor.getDefaultCursor());
                     worker = null; // Make worker "available" again
                 }
             };
+            worker.addPropertyChangeListener(e -> {
+                if (e.getPropertyName().equals("progress")) {
+                    progressBar.setValue((Integer) e.getNewValue());
+                    progressBar.setToolTipText(progressBar.getValue() + "/" + middlePane.getList().size());
+                }
+            });
 
             worker.execute();
         }
@@ -179,26 +194,27 @@ public class AppWindow extends JFrame implements KeyListener {
         }
     }
 
-    private String defineWords() {
-        definitions.clear(); // Reset definitions
+    private String defineWords(Runnable runAfterEachWord) {
+        definitionsMap.clear(); // Reset definitions
+        finishedWordsAmount.set(0); // Reset finished word count
         if (!Settings.prefersFirstDefinition()) definitionsDlg = new DefinitionsDialog(this);
-        summonDefineThreads();
+        summonDefineThreads(runAfterEachWord);
 
         // If enabled and having words with multiple definitions, show chooser dialog:
         if (!Settings.prefersFirstDefinition() && definitionsDlg.wordsToShow() > 0) {
-            definitions.putAll(definitionsDlg.getWantedDefinitions());
+            definitionsMap.putAll(definitionsDlg.getWantedDefinitions());
         }
 
         StringBuilder sb = new StringBuilder();
         for (String word : middlePane.getList()) { // Append all definitions to separate lines
-            sb.append(word).append(" - ").append(definitions.get(word)).append("\n");
+            sb.append(word).append(" - ").append(definitionsMap.get(word)).append("\n");
         }
 
         return sb.toString();
     }
 
     /** Creates an array of threads for each to define a word */
-    private void summonDefineThreads() {
+    private void summonDefineThreads(Runnable doPerWord) {
         // create a thread pool the size of how many we will use, ideally one per word, but if that's more than
         // the amount of cores available then stop at that number. (also 16 is ConcurrentHashMap's concurrent limit)
         Thread[] ts = new Thread[ Math.min(Runtime.getRuntime().availableProcessors(),
@@ -209,7 +225,10 @@ public class AppWindow extends JFrame implements KeyListener {
 
             ts[i] = new Thread(() -> {
                 // Start on our thread number, and get words 1 by 1
-                for (int w = num; w < middlePane.wordsAmount(); w++) defineIndex(w);
+                for (int w = num; w < middlePane.wordsAmount(); w++) {
+                    defineIndex(w);
+                    doPerWord.run();
+                }
             });
             ts[i].start();
         }
@@ -226,15 +245,16 @@ public class AppWindow extends JFrame implements KeyListener {
     private void defineIndex(int index) {
         String word = middlePane.getWordAt(index);
 
-        if (!definitions.containsKey(word)) { // If the current word has not been defined yet
+        if (!definitionsMap.containsKey(word)) { // If the current word has not been defined yet
             // Default text + having a key marks this word as defined to other threads
-            definitions.put(word, "No definition found");
+            definitionsMap.put(word, "No definition found");
             try {
                 tryToDefineWord(word);
             } catch (Exception e) {
                 System.out.println("No dictionary definition for " + word);
                 if (Settings.acceptsWikipediaSummary()) tryGettingWikipediaSummary(word);
             }
+            finishedWordsAmount.incrementAndGet(); // Add to count of "finished" words
         }
     }
 
@@ -255,7 +275,7 @@ public class AppWindow extends JFrame implements KeyListener {
                 jsonObject = (JSONObject) jsonArray.get(0);             // Get first object of "meanings"
                 jsonArray = (JSONArray) jsonObject.get("definitions");  // Get array of definitions
                 jsonObject = (JSONObject) jsonArray.get(0);         // Get first definition object
-                definitions.put(word, jsonObject.get("definition").toString()); // Add to definitions
+                definitionsMap.put(word, jsonObject.get("definition").toString()); // Add to definitions
             }
         }
     }
@@ -280,7 +300,7 @@ public class AppWindow extends JFrame implements KeyListener {
                 }
             }
 
-            definitions.put(w, text); // Put wikipedia summary as definition
+            definitionsMap.put(w, text); // Put wikipedia summary as definition
         } catch (Exception ex) { System.out.println("No Wikipedia entry for " + w); }
     }
 

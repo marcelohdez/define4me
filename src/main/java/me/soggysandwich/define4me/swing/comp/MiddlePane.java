@@ -77,8 +77,8 @@ public class MiddlePane extends JTabbedPane {
         return wordsArray.get(i);
     }
 
-    public String[] getList() {
-        return wordsArray.toArray(new String[0]);
+    public ArrayList<String> getList() {
+        return wordsArray;
     }
 
     public boolean removeSelectedWord(boolean reselect) {
