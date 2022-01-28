@@ -1,6 +1,6 @@
-package me.soggysandwich.define4me.swing.dialog;
+package me.marcelohdez.define4me.swing.dialog;
 
-import me.soggysandwich.define4me.Define4Me;
+import me.marcelohdez.define4me.Define4Me;
 
 import javax.swing.*;
 import java.awt.*;

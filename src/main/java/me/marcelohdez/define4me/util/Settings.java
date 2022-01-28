@@ -1,4 +1,4 @@
-package me.soggysandwich.define4me.util;
+package me.marcelohdez.define4me.util;
 
 import java.util.prefs.Preferences;
 

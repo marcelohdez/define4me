@@ -1,10 +1,10 @@
-package me.soggysandwich.define4me.swing;
+package me.marcelohdez.define4me.swing;
 
-import me.soggysandwich.define4me.Define4Me;
-import me.soggysandwich.define4me.swing.comp.MiddlePane;
-import me.soggysandwich.define4me.swing.dialog.*;
-import me.soggysandwich.define4me.util.Settings;
-import me.soggysandwich.define4me.util.WordParser;
+import me.marcelohdez.define4me.Define4Me;
+import me.marcelohdez.define4me.swing.comp.MiddlePane;
+import me.marcelohdez.define4me.swing.dialog.*;
+import me.marcelohdez.define4me.util.Settings;
+import me.marcelohdez.define4me.util.WordParser;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;

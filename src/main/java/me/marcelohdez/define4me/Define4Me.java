@@ -1,7 +1,7 @@
-package me.soggysandwich.define4me;
+package me.marcelohdez.define4me;
 
-import me.soggysandwich.define4me.swing.AppWindow;
-import me.soggysandwich.define4me.util.Settings;
+import me.marcelohdez.define4me.swing.AppWindow;
+import me.marcelohdez.define4me.util.Settings;
 
 import javax.swing.*;
 import java.awt.*;
