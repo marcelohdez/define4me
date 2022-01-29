@@ -121,9 +121,10 @@ public class AppWindow extends JFrame implements KeyListener {
 
                 @Override
                 protected String doInBackground() {
-                    resultText = defineWords(() -> setProgress(
-                            (int) (finishedWordsAmount.intValue() / (float) middlePane.getList().size())
-                    ));
+                    resultText = defineWords(() -> {
+                        float progressFloat = (float) finishedWordsAmount.intValue() / middlePane.getList().size();
+                        setProgress((int) (progressFloat * 100));
+                    });
                     return resultText;
                 }
 
@@ -214,7 +215,7 @@ public class AppWindow extends JFrame implements KeyListener {
     }
 
     /** Creates an array of threads for each to define a word */
-    private void summonDefineThreads(Runnable doPerWord) {
+    private void summonDefineThreads(Runnable runAfterEachWord) {
         // create a thread pool the size of how many we will use, ideally one per word, but if that's more than
         // the amount of cores available then stop at that number. (also 16 is ConcurrentHashMap's concurrent limit)
         Thread[] ts = new Thread[ Math.min(Runtime.getRuntime().availableProcessors(),
@@ -227,7 +228,7 @@ public class AppWindow extends JFrame implements KeyListener {
                 // Start on our thread number, and get words 1 by 1
                 for (int w = num; w < middlePane.wordsAmount(); w++) {
                     defineIndex(w);
-                    doPerWord.run();
+                    runAfterEachWord.run();
                 }
             });
             ts[i].start();
