@@ -27,7 +27,10 @@ public class AddWordDialog extends JDialog implements KeyListener {
 
         textField.addKeyListener(this);
         acceptButton.addActionListener((e) -> acceptWord());
-        cancelButton.addActionListener((e) -> setVisible(false));
+        cancelButton.addActionListener((e) -> {
+            textField.setText("");
+            setVisible(false);
+        });
 
         add(textField, BorderLayout.CENTER);
         buttonRow.add(acceptButton);
@@ -36,7 +39,6 @@ public class AddWordDialog extends JDialog implements KeyListener {
         Define4Me.initButtons(null, acceptButton, cancelButton);
 
         pack();
-
     }
 
     public String getWord() {

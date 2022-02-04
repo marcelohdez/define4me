@@ -4,7 +4,10 @@ import me.marcelohdez.define4me.Define4Me;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 
+/** A dialog with multiple choice buttons */
 public class ChoiceDialog extends JDialog {
 
     private String response;
@@ -43,6 +46,7 @@ public class ChoiceDialog extends JDialog {
         to.add(button);
     }
 
+    /** Gets the text of the button chosen */
     public String response() {
         setModalityType(ModalityType.APPLICATION_MODAL);
         setVisible(true);
