@@ -10,6 +10,9 @@ import java.awt.event.KeyListener;
 public class Define4Me {
 
     public static final String VERSION = "1.2-DEV";
+    // Characters to allow in words, these are in addition to regular letters:
+    public static final char[] ALLOWED_CHARS = {'-', '\'', '(', ')'};
+
     private static boolean isOnMacOS;
 
     public static void main(String[] args) {

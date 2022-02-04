@@ -20,6 +20,8 @@ import java.awt.event.KeyListener;
 import java.io.*;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.Scanner;
 import java.util.concurrent.ConcurrentHashMap;
@@ -30,10 +32,11 @@ public class AppWindow extends JFrame implements KeyListener {
     // Links to use when searching for definitions/descriptions
     private static final String DICT_QUERY = "https://api.dictionaryapi.dev/api/v2/entries/en/";
     private static final String WIKI_QUERY =
-            "https://en.wikipedia.org/w/api.php?format=json&action=query&prop=extracts&exintro&explaintext&redirects=1&titles=";
+            "https://en.wikipedia.org/w/api.php?format=json&action=query&prop=extracts&exintro&exsentences=1&explaintext&titles=";
 
     private DefinitionsDialog definitionsDlg; // Dialog to choose definitions from if enabled in preferences
     private final ConcurrentHashMap<String, String> definitionsMap = new ConcurrentHashMap<>(); // Word definitions
+    private final ArrayList<Integer> wikipediaQueue = new ArrayList<>(); // Stores word indexes to look for on wikipedia
 
     // Menu bar stuffs: File menu
     private final JMenuBar menuBar = new JMenuBar();
@@ -198,8 +201,20 @@ public class AppWindow extends JFrame implements KeyListener {
     private String defineWords(Runnable runAfterEachWord) {
         definitionsMap.clear(); // Reset definitions
         finishedWordsAmount.set(0); // Reset finished word count
+        wikipediaQueue.clear();
         if (!Settings.prefersFirstDefinition()) definitionsDlg = new DefinitionsDialog(this);
-        summonDefineThreads(runAfterEachWord);
+        summonDefineThreads(runAfterEachWord); // Define all words in parallel using dictionaryAPI.
+
+        // Add words not found in dictionary to Wikipedia queue, to do all in one API call
+        if (wikipediaQueue.size() > 0) {
+            StringBuilder queue = new StringBuilder();
+            for (int i = 0; i < wikipediaQueue.size(); i++) {
+                queue.append(middlePane.getList().get(wikipediaQueue.get(i)));
+                // Separate words by | to fetch them all from wikipedia at once
+                if (i + 1 != wikipediaQueue.size()) queue.append("|");
+            }
+            tryGettingWikipediaSummary(queue.toString());
+        }
 
         // If enabled and having words with multiple definitions, show chooser dialog:
         if (!Settings.prefersFirstDefinition() && definitionsDlg.wordsToShow() > 0) {
@@ -250,10 +265,11 @@ public class AppWindow extends JFrame implements KeyListener {
             // Default text + having a key marks this word as defined to other threads
             definitionsMap.put(word, "No definition found");
             try {
-                tryToDefineWord(word);
+                //tryToDefineWord(word);
+                throw new Exception("poopity scoop");
             } catch (Exception e) {
                 System.out.println("No dictionary definition for " + word);
-                if (Settings.acceptsWikipediaSummary()) tryGettingWikipediaSummary(word);
+                if (Settings.acceptsWikipediaSummary()) wikipediaQueue.add(index);
             }
             finishedWordsAmount.incrementAndGet(); // Add to count of "finished" words
         }
@@ -282,27 +298,28 @@ public class AppWindow extends JFrame implements KeyListener {
     }
 
     /** Try to define the given string with the first sentence of a Wikipedia article with the same title */
-    private void tryGettingWikipediaSummary(String w) {
+    private void tryGettingWikipediaSummary(String words) {
         // Use the wikipedia query: also change all spaces to %20 for link to work
-        try (var stream = new URL(WIKI_QUERY + w.replaceAll(" ", "%20"))
+        try (var stream = new URL(WIKI_QUERY + words.replaceAll(" ", "%20"))
                 .openStream()) {
 
             JSONObject jsonObject = (JSONObject) parseStream(stream); // Parse response
             jsonObject = (JSONObject) jsonObject.get("query"); // Get query section
             jsonObject = (JSONObject) jsonObject.get("pages"); // Get pages section
-            jsonObject = (JSONObject) jsonObject.get(jsonObject.keySet().iterator().next()); // Choose first page
 
-            String text = jsonObject.get("extract").toString();
-            for (int i = 0; i < text.length() - 1; i++) { // Find the first period to cut everything after it
-                // Make sure the next char after this period is not a digit, to not cut off decimals/version numbers.
-                if (text.charAt(i) == '.' && !Character.isDigit(text.charAt(i + 1))) {
-                    text = text.substring(0, i + 1); // Cut text down to this first sentence
-                    break; // Leave this for-loop
+            for (Object pageNumber : jsonObject.keySet()) {
+                JSONObject pageJSON = (JSONObject) jsonObject.get(pageNumber);
+                // Map definition to page title
+                String def = pageJSON.get("extract").toString();
+                if (!def.isEmpty()) {
+                    definitionsMap.put(pageJSON.get("title").toString(), def);
                 }
             }
 
-            definitionsMap.put(w, text); // Put wikipedia summary as definition
-        } catch (Exception ex) { System.out.println("No Wikipedia entry for " + w); }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            System.out.println("No Wikipedia entry for " + words);
+        }
     }
 
     private Object parseStream(InputStream stream) throws IOException, ParseException {
