@@ -11,9 +11,9 @@ hyphens, bullet points, extra spaces, or other discrepancies around the words by
 
 ## How to use
 Once you have downloaded the .jar file of the version you would like to run from the 
-[releases](https://github.com/soggy-sandwich/define4me/releases) page, you can double-click it like any
+[releases](https://github.com/marcelohdez/define4me/releases) page, you can double-click it like any
 other application. (If it does not open make sure you have a proper JDK installed, refer to the 
-[prerequisites](https://github.com/soggy-sandwich/define4me#prerequisites) section)
+[prerequisites](https://github.com/marcelohdez/define4me#prerequisites) section)
 
 _On macOS, you may have to right-click the .jar file and click "open" to bypass the unknown developer
 warning._
@@ -44,4 +44,4 @@ gradle's default run scripts will be in ```build > bin```.
 
 ## License
 Define4Me is licensed under the GNU General Public License v3.0, more information can
-be found in the [LICENSE](https://github.com/soggy-sandwich/define4me/blob/master/LICENSE) file.
+be found in the [LICENSE](https://github.com/marcelohdez/define4me/blob/master/LICENSE) file.
