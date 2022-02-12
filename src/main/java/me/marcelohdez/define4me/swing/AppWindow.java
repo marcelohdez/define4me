@@ -17,11 +17,12 @@ import java.awt.datatransfer.StringSelection;
 import java.awt.datatransfer.UnsupportedFlavorException;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
-import java.io.*;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.Locale;
 import java.util.Objects;
 import java.util.Scanner;
 import java.util.concurrent.ConcurrentHashMap;
@@ -203,7 +204,12 @@ public class AppWindow extends JFrame implements KeyListener {
         finishedWordsAmount.set(0); // Reset finished word count
         wikipediaQueue.clear();
         if (!Settings.prefersFirstDefinition()) definitionsDlg = new DefinitionsDialog(this);
-        summonDefineThreads(runAfterEachWord); // Define all words in parallel using dictionaryAPI.
+
+        // Define words
+        for (int i = 0; i < middlePane.wordsAmount(); i++) {
+            defineIndex(i);
+            runAfterEachWord.run();
+        }
 
         // Add words not found in dictionary to Wikipedia queue, to do all in one API call
         if (wikipediaQueue.size() > 0) {
@@ -221,41 +227,13 @@ public class AppWindow extends JFrame implements KeyListener {
             definitionsMap.putAll(definitionsDlg.getWantedDefinitions());
         }
 
+        // Create text to show user: (All words in new lines, with their definition after a dash)
         StringBuilder sb = new StringBuilder();
         for (String word : middlePane.getList()) { // Append all definitions to separate lines
             sb.append(word).append(" - ").append(definitionsMap.get(word)).append("\n");
         }
 
         return sb.toString();
-    }
-
-    /** Creates an array of threads for each to define a word */
-    private void summonDefineThreads(Runnable runAfterEachWord) {
-        // create a thread pool the size of how many we will use, ideally one per word, but if that's more than
-        // the amount of cores available then stop at that number. (also 16 is ConcurrentHashMap's concurrent limit)
-        Thread[] ts = new Thread[ Math.min(Runtime.getRuntime().availableProcessors(),
-                Math.min(middlePane.wordsAmount(), 16)) ];
-        // Create threads:
-        for (int i = 0; i < ts.length; i++) {
-            int num = i; // Local value to pass to thread's for-loop.
-
-            ts[i] = new Thread(() -> {
-                // Start on our thread number, and get words 1 by 1
-                for (int w = num; w < middlePane.wordsAmount(); w++) {
-                    defineIndex(w);
-                    runAfterEachWord.run();
-                }
-            });
-            ts[i].start();
-        }
-        // Wait for all threads to finish.
-        for (Thread thread : ts) {
-            try {
-                thread.join();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
     }
 
     private void defineIndex(int index) {
@@ -265,8 +243,7 @@ public class AppWindow extends JFrame implements KeyListener {
             // Default text + having a key marks this word as defined to other threads
             definitionsMap.put(word, "No definition found");
             try {
-                //tryToDefineWord(word);
-                throw new Exception("poopity scoop");
+                tryToDefineWord(word);
             } catch (Exception e) {
                 System.out.println("No dictionary definition for " + word);
                 if (Settings.acceptsWikipediaSummary()) wikipediaQueue.add(index);
