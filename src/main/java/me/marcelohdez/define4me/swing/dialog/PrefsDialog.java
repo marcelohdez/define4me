@@ -52,6 +52,10 @@ public class PrefsDialog extends JDialog implements WindowListener {
         // Definition choice
         preferFirstDefinition.setSelected(Settings.prefersFirstDefinition());
         preferToAskDefinition.setSelected(!preferFirstDefinition.isSelected());
+
+        boolean enable = Settings.wikiPreference() != Settings.WIKI_PREF_ALWAYS;
+        preferFirstDefinition.setEnabled(enable); // Disable if wikipedia is always being used
+        preferToAskDefinition.setEnabled(enable);
         // Wikipedia preference
         wikiPreferencesBox.setSelectedIndex(Settings.wikiPreference());
         // Mac menu bar choice
@@ -75,6 +79,11 @@ public class PrefsDialog extends JDialog implements WindowListener {
         wikiPreferencesBox.setToolTipText(tooltip);
 
         wikiPreferencesBox.setEnabled(parent.isWorkerAvailable());
+        wikiPreferencesBox.addItemListener(e -> {
+            boolean enable = e.getItem() != "Always";
+            preferFirstDefinition.setEnabled(enable);
+            preferToAskDefinition.setEnabled(enable);
+        });
         pnl.add(wikiPrefsLabel);
         pnl.add(wikiPreferencesBox);
 
@@ -88,7 +97,6 @@ public class PrefsDialog extends JDialog implements WindowListener {
         JLabel label = new JLabel(labelText);
         pnl.add(label);
         for (JRadioButton button : buttons) {
-            button.setEnabled(enabled);
             group.add(button);
             pnl.add(button);
         }
