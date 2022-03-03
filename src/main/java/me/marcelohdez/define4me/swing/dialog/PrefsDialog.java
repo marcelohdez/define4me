@@ -16,6 +16,7 @@ public class PrefsDialog extends JDialog implements WindowListener {
     private final JRadioButton preferToAskDefinition = new JRadioButton("Ask If Multiple");
     // Wikipedia summary preference
     private final JCheckBox useWikipedia = new JCheckBox("Use Wikipedia");
+    private final JComboBox<String> wikiPreferencesBox = new JComboBox<>(new String[]{"Never", "As Backup", "Always"});
     // Mac menu bar preference
     private final JRadioButton preferMacMenuBar = new JRadioButton("macOS");
     private final JRadioButton preferInAppMenuBar = new JRadioButton("In-App");
@@ -34,13 +35,7 @@ public class PrefsDialog extends JDialog implements WindowListener {
                 preferFirstDefinition, preferToAskDefinition);
 
         // Add Wikipedia preference checkbox:
-        useWikipedia.setToolTipText("<html>Use the first sentence of a Wikipedia article<br>" +
-                "with the same title of a word if a dictionary<br>" +
-                "definition is not found</html>");
-        JPanel pnl = new JPanel();
-        pnl.add(useWikipedia);
-        useWikipedia.setEnabled(parent.isWorkerAvailable());
-        add(pnl);
+        createWikipediaRow(parent);
 
         // Add Menu bar option if available:
         if (Define4Me.isOnMacOS()) {
@@ -59,13 +54,32 @@ public class PrefsDialog extends JDialog implements WindowListener {
         preferFirstDefinition.setSelected(Settings.prefersFirstDefinition());
         preferToAskDefinition.setSelected(!preferFirstDefinition.isSelected());
         // Wikipedia preference
-        useWikipedia.setSelected(Settings.acceptsWikipediaSummary());
+        wikiPreferencesBox.setSelectedIndex(Settings.wikiPreference());
         // Mac menu bar choice
         preferMacMenuBar.setSelected(Settings.prefersMacMenuBar());
         preferInAppMenuBar.setSelected(!preferMacMenuBar.isSelected());
 
         // Set hand cursor for radio buttons
         Define4Me.initButtons(null, preferFirstDefinition, preferToAskDefinition, useWikipedia, preferInAppMenuBar);
+    }
+
+    private void createWikipediaRow(AppWindow parent) {
+        JPanel pnl = new JPanel();
+        JLabel wikiPrefsLabel = new JLabel("Use Wikipedia: ");
+
+        // html is used for the <br> tag, which creates a new line. Tooltips do not initially support line breaks.
+        String tooltip = """
+                <html>"As Backup" will use Wikipedia when a word is not<br>
+                found in the dictionary.</html>""";
+
+        wikiPrefsLabel.setToolTipText(tooltip);
+        wikiPreferencesBox.setToolTipText(tooltip);
+
+        wikiPreferencesBox.setEnabled(parent.isWorkerAvailable());
+        pnl.add(wikiPrefsLabel);
+        pnl.add(wikiPreferencesBox);
+
+        add(pnl);
     }
 
     private void createRadioRow(String labelText, boolean enabled, JRadioButton... buttons) {
@@ -86,7 +100,7 @@ public class PrefsDialog extends JDialog implements WindowListener {
     @Override
     public void windowClosing(WindowEvent e) {
         Settings.setDefinitionPreference(preferFirstDefinition.isSelected());
-        Settings.setWikipediaSummaryPreference(useWikipedia.isSelected());
+        Settings.setWikiPreference(wikiPreferencesBox.getSelectedIndex());
         Settings.setMacMenuBarPreference(preferMacMenuBar.isSelected());
     }
 

@@ -243,12 +243,16 @@ public class AppWindow extends JFrame implements KeyListener {
             // Default text + having a key marks this word as defined to other threads
             definitionsMap.put(word, "No definition found");
             try {
-                tryToDefineWord(word);
+                if (Settings.wikiPreference() != Settings.WIKI_PREF_ALWAYS) {
+                    tryToDefineWord(word);
+                } else {
+                    wikipediaQueue.add(index);
+                }
             } catch (Exception e) {
                 System.out.println("No dictionary definition for " + word);
-                if (Settings.acceptsWikipediaSummary()) wikipediaQueue.add(index);
+                if (Settings.wikiPreference() == Settings.WIKI_PREF_AS_BACKUP) wikipediaQueue.add(index);
             }
-            finishedWordsAmount.incrementAndGet(); // Add to count of "finished" words
+            finishedWordsAmount.incrementAndGet(); // Add to count of "finished" words for progress bar
         }
     }
 
