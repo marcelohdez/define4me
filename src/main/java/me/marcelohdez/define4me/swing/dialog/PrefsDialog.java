@@ -26,38 +26,34 @@ public class PrefsDialog extends JDialog implements WindowListener {
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
         setModalityType(ModalityType.APPLICATION_MODAL);
         setResizable(false);
-
         addWindowListener(this);
         setLayout(new BoxLayout(getContentPane(), BoxLayout.Y_AXIS));
-        initComps();
-        createRadioRow("Definition choice:", parent.isWorkerAvailable(),
-                preferFirstDefinition, preferToAskDefinition);
 
-        // Add Wikipedia preference checkbox:
+        initComps(parent.isWorkerAvailable());
+        createRadioRow("Definition choice:", preferFirstDefinition, preferToAskDefinition);
         createWikipediaRow(parent);
-
         // Add Menu bar option if available:
         if (Define4Me.isOnMacOS()) {
-            createRadioRow("Menu bar style (requires restart):", parent.isWorkerAvailable(),
-                    preferMacMenuBar, preferInAppMenuBar);
+            createRadioRow("Menu bar style (requires restart):", preferMacMenuBar, preferInAppMenuBar);
         }
 
         pack();
-        setLocationRelativeTo(parent);
+        setLocationRelativeTo(parent); // Center on parent window
         setVisible(true);
 
     }
 
-    private void initComps() {
+    private void initComps(boolean isWorkerAvailable) {
         // Definition choice
         preferFirstDefinition.setSelected(Settings.prefersFirstDefinition());
         preferToAskDefinition.setSelected(!preferFirstDefinition.isSelected());
 
-        boolean enable = Settings.wikiPreference() != Settings.WIKI_PREF_ALWAYS;
-        preferFirstDefinition.setEnabled(enable); // Disable if wikipedia is always being used
-        preferToAskDefinition.setEnabled(enable);
+        boolean enableDefPrefs = isWorkerAvailable && Settings.wikiPreference() != Settings.WIKI_PREF_ALWAYS;
+        preferFirstDefinition.setEnabled(enableDefPrefs); // Disable if wikipedia is always being used
+        preferToAskDefinition.setEnabled(enableDefPrefs);
         // Wikipedia preference
         wikiPreferencesBox.setSelectedIndex(Settings.wikiPreference());
+        wikiPreferencesBox.setEnabled(isWorkerAvailable);
         // Mac menu bar choice
         preferMacMenuBar.setSelected(Settings.prefersMacMenuBar());
         preferInAppMenuBar.setSelected(!preferMacMenuBar.isSelected());
@@ -90,7 +86,7 @@ public class PrefsDialog extends JDialog implements WindowListener {
         add(pnl);
     }
 
-    private void createRadioRow(String labelText, boolean enabled, JRadioButton... buttons) {
+    private void createRadioRow(String labelText, JRadioButton... buttons) {
         JPanel pnl = new JPanel();
         ButtonGroup group = new ButtonGroup(); // Only one radio button can be activated per group
 
