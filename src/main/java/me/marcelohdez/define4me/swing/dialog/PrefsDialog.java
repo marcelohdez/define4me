@@ -15,7 +15,6 @@ public class PrefsDialog extends JDialog implements WindowListener {
     private final JRadioButton preferFirstDefinition = new JRadioButton("First");
     private final JRadioButton preferToAskDefinition = new JRadioButton("Ask If Multiple");
     // Wikipedia summary preference
-    private final JCheckBox useWikipedia = new JCheckBox("Use Wikipedia");
     private final JComboBox<String> wikiPreferencesBox = new JComboBox<>(new String[]{"Never", "As Backup", "Always"});
     // Mac menu bar preference
     private final JRadioButton preferMacMenuBar = new JRadioButton("macOS");
@@ -60,7 +59,7 @@ public class PrefsDialog extends JDialog implements WindowListener {
         preferInAppMenuBar.setSelected(!preferMacMenuBar.isSelected());
 
         // Set hand cursor for radio buttons
-        Define4Me.initButtons(null, preferFirstDefinition, preferToAskDefinition, useWikipedia, preferInAppMenuBar);
+        Define4Me.addHandCursorAndKLTo(null, preferFirstDefinition, preferToAskDefinition, wikiPreferencesBox, preferInAppMenuBar);
     }
 
     private void createWikipediaRow(AppWindow parent) {

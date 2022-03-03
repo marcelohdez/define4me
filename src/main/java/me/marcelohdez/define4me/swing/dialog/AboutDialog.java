@@ -42,7 +42,7 @@ public class AboutDialog extends JDialog {
         JMenuItem copyVersion = new JMenuItem("Copy version");
 
         copyMenu.add(copyVersion);
-        Define4Me.initButtons(null, copyVersion);
+        Define4Me.addHandCursorAndKLTo(null, copyVersion);
         copyVersion.addActionListener((e) -> {
             StringSelection text = new StringSelection("v" + Define4Me.VERSION);
             Toolkit.getDefaultToolkit().getSystemClipboard().setContents(text, text);

@@ -40,7 +40,7 @@ public class MiddlePane extends JTabbedPane {
         statusText.addKeyListener(kl);
         statusText.setComponentPopupMenu(textMenu);
 
-        Define4Me.initButtons(app, addButton, removeButton);
+        Define4Me.addHandCursorAndKLTo(app, addButton, removeButton);
 
     }
 

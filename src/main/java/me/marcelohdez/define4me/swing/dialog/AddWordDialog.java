@@ -36,7 +36,7 @@ public class AddWordDialog extends JDialog implements KeyListener {
         buttonRow.add(acceptButton);
         buttonRow.add(cancelButton);
         add(buttonRow, BorderLayout.SOUTH);
-        Define4Me.initButtons(null, acceptButton, cancelButton);
+        Define4Me.addHandCursorAndKLTo(null, acceptButton, cancelButton);
 
         pack();
     }

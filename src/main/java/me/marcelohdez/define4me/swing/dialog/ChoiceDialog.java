@@ -4,8 +4,6 @@ import me.marcelohdez.define4me.Define4Me;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
 
 /** A dialog with multiple choice buttons */
 public class ChoiceDialog extends JDialog {
@@ -37,7 +35,7 @@ public class ChoiceDialog extends JDialog {
 
     private void addButtonTo(JPanel to, String buttonText) {
         JButton button = new JButton(buttonText);
-        Define4Me.initButtons(null, button);
+        Define4Me.addHandCursorAndKLTo(null, button);
         button.addActionListener(e -> {
             response = buttonText;
             setVisible(false);

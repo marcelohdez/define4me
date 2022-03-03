@@ -32,16 +32,19 @@ public class Define4Me {
     }
 
     /**
-     * Initializes the given buttons with a KeyListener, a hand cursor, and
-     * some padding if they are JButtons.
+     * Gives the given Component(s) a hand cursor, a key listener, and some padding
+     * if they are a JButton.
      *
-     * @param buttons Buttons to initialize
+     * @param comps Components to do stuff to
      */
-    public static void initButtons(KeyListener kl, AbstractButton... buttons) {
-        for (AbstractButton b : buttons) {
-            if (kl != null) b.addKeyListener(kl);
-            b.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-            if (!isOnMacOS && b instanceof JButton) b.setMargin(new Insets(6, 12, 6, 12));
+    public static void addHandCursorAndKLTo(KeyListener kl, Component... comps) {
+        for (Component c : comps) {
+            c.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+            if (kl != null) c.addKeyListener(kl);
+
+            if (!isOnMacOS && c instanceof JButton) {
+                ((JButton) c).setMargin(new Insets(6, 12, 6, 12));
+            }
         }
     }
 

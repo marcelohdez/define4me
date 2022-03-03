@@ -103,7 +103,7 @@ public class AppWindow extends JFrame implements KeyListener {
         defineButton.addActionListener((e) -> startWorker());
 
         defineButton.setEnabled(false); // Disable define button until we have words to define
-        Define4Me.initButtons(this, pasteButton, defineButton, openAbout, openPrefs, copyText, editWord,
+        Define4Me.addHandCursorAndKLTo(this, pasteButton, defineButton, openAbout, openPrefs, copyText, editWord,
                 pasteFromWordList);
 
         fileMenu.add(openAbout);
