@@ -242,15 +242,20 @@ public class AppWindow extends JFrame implements KeyListener {
         if (!definitionsMap.containsKey(word)) { // If the current word has not been defined yet
             // Default text + having a key marks this word as defined to other threads
             definitionsMap.put(word, "No definition found");
+            int pref = Settings.wikiPreference();
             try {
-                if (Settings.wikiPreference() != Settings.WIKI_PREF_ALWAYS) {
+                if (pref != Settings.WIKI_PREF_ALWAYS) {
                     tryToDefineWord(word);
                 } else {
                     wikipediaQueue.add(index);
                 }
             } catch (Exception e) {
                 System.out.println("No dictionary definition for " + word);
-                if (Settings.wikiPreference() == Settings.WIKI_PREF_AS_BACKUP) wikipediaQueue.add(index);
+                if (pref == Settings.WIKI_PREF_AS_BACKUP) {
+                    wikipediaQueue.add(index);
+                } else if (pref == Settings.WIKI_PREF_NEVER) {
+                    System.out.println("Not checking Wikipedia for " + word + " as the preference is set to never!");
+                }
             }
             finishedWordsAmount.incrementAndGet(); // Add to count of "finished" words for progress bar
         }
@@ -267,7 +272,7 @@ public class AppWindow extends JFrame implements KeyListener {
             // If user prefers to choose between multiple definitions:
             if (!Settings.prefersFirstDefinition() && jsonArray.size() > 1) {
 
-                definitionsDlg.addMeaningsArrayFor(word, jsonArray); // Add this word and its definitions to definitionsDlg
+                definitionsDlg.addMeaningsArrayFor(word, jsonArray); // Add this word and its definitions to choose from
 
             } else { // Else select first meaning and definition:
                 jsonObject = (JSONObject) jsonArray.get(0);             // Get first object of "meanings"
