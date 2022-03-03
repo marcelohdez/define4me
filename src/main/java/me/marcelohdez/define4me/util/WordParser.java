@@ -18,17 +18,19 @@ public final class WordParser {
         for (int i = 0; i < string.length(); i++) {
             char c = string.charAt(i); // Current char
 
-            // Non-letter allowed characters are only added it if there's been a letter found and a letter after them
-            if (isCharacterAllowed(c)) {
-                if (letterFound && i + 1 < string.length() && Character.isLetter(string.charAt(i + 1))) {
-                    wordBuilder.append(c);
-                }
-            } else if (Character.isLetter(c)) { // Else if it's a letter add it
+            if (Character.isLetter(c)) { // if it's a letter add it
                 if (letterFound) { // If a letter has been found before, just add this one
                     wordBuilder.append(c);
                 } else { // Else, this is the first letter, therefore capitalize it
                     letterFound = true;
                     wordBuilder.append(Character.toUpperCase(c));
+                }
+            // Non-letter allowed characters are only added it if there's been a letter found and a letter after them
+            } else if (isCharacterAllowed(c)) {
+                if (i + 1 < string.length()) {
+                    if (letterFound && Character.isLetter(string.charAt(i + 1))) {
+                        wordBuilder.append(c);
+                    }
                 }
             }
         }
