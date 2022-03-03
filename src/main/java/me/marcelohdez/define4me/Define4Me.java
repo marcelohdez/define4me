@@ -14,6 +14,7 @@ public class Define4Me {
     public static final char[] ALLOWED_CHARS = {' ', '-', '\''}; // space, hyphen, and apostrophe
 
     private static boolean isOnMacOS;
+    private static final Insets padding = new Insets(6, 12, 6, 12); // Won't be used on macOS
 
     public static void main(String[] args) {
         // Set look and feel:
@@ -43,7 +44,7 @@ public class Define4Me {
             if (kl != null) c.addKeyListener(kl);
 
             if (!isOnMacOS && c instanceof JButton) {
-                ((JButton) c).setMargin(new Insets(6, 12, 6, 12));
+                ((JButton) c).setMargin(padding); // padding will be null if on macOS
             }
         }
     }
