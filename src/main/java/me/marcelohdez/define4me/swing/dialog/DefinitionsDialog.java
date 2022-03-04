@@ -1,6 +1,6 @@
-package me.soggysandwich.define4me.swing.dialog;
+package me.marcelohdez.define4me.swing.dialog;
 
-import me.soggysandwich.define4me.Define4Me;
+import me.marcelohdez.define4me.Define4Me;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
@@ -32,7 +32,7 @@ public class DefinitionsDialog extends JDialog {
         definitionsPanel.setLayout(new BoxLayout(definitionsPanel, BoxLayout.Y_AXIS));
 
         JButton doneButton = new JButton("Done");
-        Define4Me.initButtons(null, doneButton);
+        Define4Me.addHandCursorAndKLTo(null, doneButton);
         doneButton.addActionListener((e) -> {
             setVisible(false);
             dispose();

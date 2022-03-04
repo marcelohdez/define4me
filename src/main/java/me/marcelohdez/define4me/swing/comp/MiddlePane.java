@@ -1,8 +1,8 @@
-package me.soggysandwich.define4me.swing.comp;
+package me.marcelohdez.define4me.swing.comp;
 
-import me.soggysandwich.define4me.Define4Me;
-import me.soggysandwich.define4me.swing.AppWindow;
-import me.soggysandwich.define4me.swing.dialog.EditWordDialog;
+import me.marcelohdez.define4me.Define4Me;
+import me.marcelohdez.define4me.swing.AppWindow;
+import me.marcelohdez.define4me.swing.dialog.EditWordDialog;
 
 import javax.swing.*;
 import java.awt.*;
@@ -18,12 +18,9 @@ public class MiddlePane extends JTabbedPane {
     private final JButton addButton = new JButton("Add");
     private final DefaultListModel<String> words = new DefaultListModel<>();
     private final JList<String> wordList = new JList<>(words);
-    private final JTextArea statusText = new JTextArea("""
-            No words have been defined yet.
-            """);
+    private final JTextArea statusText = new JTextArea("No words have been defined yet.");
 
-    public MiddlePane(AppWindow app, JPopupMenu wordsMenu, JPopupMenu textMenu,
-                      KeyListener kl) {
+    public MiddlePane(AppWindow app, JPopupMenu wordsMenu, JPopupMenu textMenu, KeyListener kl) {
         addTab("Words", createListAndButtonsPanel());
         addTab("Definitions", new JScrollPane(statusText));
 
@@ -43,7 +40,7 @@ public class MiddlePane extends JTabbedPane {
         statusText.addKeyListener(kl);
         statusText.setComponentPopupMenu(textMenu);
 
-        Define4Me.initButtons(app, addButton, removeButton);
+        Define4Me.addHandCursorAndKLTo(app, addButton, removeButton);
 
     }
 
@@ -76,12 +73,12 @@ public class MiddlePane extends JTabbedPane {
         return wordsArray.size();
     }
 
-    public String getWordAt(int i) {
+    public String wordAt(int i) {
         return wordsArray.get(i);
     }
 
-    public String[] getList() {
-        return wordsArray.toArray(new String[0]);
+    public ArrayList<String> getList() {
+        return wordsArray;
     }
 
     public boolean removeSelectedWord(boolean reselect) {
@@ -132,19 +129,19 @@ public class MiddlePane extends JTabbedPane {
 
         if (!wordList.isSelectionEmpty()) {
             int index = wordList.getSelectedIndex();
-            EditWordDialog ewd = new EditWordDialog(this, words.get(index));
-            if (ewd.accepted()) {
+            String newWord = new EditWordDialog(this, words.get(index)).getWord();
+            if (!newWord.isEmpty()) {
                 removeSelectedWord(false);
-                replaceWordAt(index, ewd.getWord());
+                replaceWordAt(index, newWord);
                 wordList.setSelectedIndex(index);
             }
-            ewd.dispose();
         }
 
     }
 
     public void setStatusText(String t) {
         statusText.setText(t);
+        setSelectedIndex(1); // Switch to definitions tab to show new text
     }
 
     public String getText() {

@@ -1,4 +1,4 @@
-package me.soggysandwich.define4me.swing.dialog;
+package me.marcelohdez.define4me.swing.dialog;
 
 import java.awt.*;
 
