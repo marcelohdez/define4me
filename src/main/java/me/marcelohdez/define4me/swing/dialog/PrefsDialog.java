@@ -48,7 +48,7 @@ public class PrefsDialog extends JDialog implements WindowListener {
         preferFirstDefinition.setSelected(Settings.prefersFirstDefinition());
         preferToAskDefinition.setSelected(!preferFirstDefinition.isSelected());
 
-        boolean enableDefPrefs = isWorkerAvailable && Settings.wikiPreference() != Settings.WIKI_PREF_ALWAYS;
+        boolean enableDefPrefs = isWorkerAvailable && !Settings.isWikiPrefAlways();
         preferFirstDefinition.setEnabled(enableDefPrefs); // Disable if wikipedia is always being used
         preferToAskDefinition.setEnabled(enableDefPrefs);
         // Wikipedia preference

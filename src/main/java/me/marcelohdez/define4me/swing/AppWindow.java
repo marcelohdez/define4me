@@ -232,18 +232,17 @@ public class AppWindow extends JFrame implements KeyListener {
         String word = middlePane.wordAt(index);
 
         definitionsArray.put(word, "No definition found");
-        int pref = Settings.wikiPreference();
         try {
-            if (pref == Settings.WIKI_PREF_ALWAYS) {
+            if (Settings.isWikiPrefAlways()) {
                 appendToWikiQueue(word);
             } else {
                 tryDefining(word);
             }
         } catch (Exception e) {
             System.out.println("No dictionary definition for " + word);
-            if (pref == Settings.WIKI_PREF_AS_BACKUP) {
+            if (Settings.isWikiPrefAsBackup()) {
                 appendToWikiQueue(word);
-            } else if (pref == Settings.WIKI_PREF_NEVER) {
+            } else if (Settings.isWikiPrefNever()) {
                 System.out.println("Not checking Wikipedia for " + word + " as the preference is set to never!");
             }
         }

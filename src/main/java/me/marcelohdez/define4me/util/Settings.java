@@ -12,9 +12,9 @@ public final class Settings {
     private static final String KEY_MENU_BAR_PREF = "preferMacMenuBar";
 
     // Wikipedia preference options:
-    public static final int WIKI_PREF_NEVER = 0;
-    public static final int WIKI_PREF_AS_BACKUP = 1;
-    public static final int WIKI_PREF_ALWAYS = 2;
+    private static final int PREF_WIKI_NEVER_USE = 0;
+    private static final int PREF_WIKI_USE_AS_BACKUP = 1;
+    private static final int PREF_WIKI_ALWAYS_USE = 2;
 
     // Getters
     public static boolean prefersFirstDefinition() {
@@ -24,7 +24,19 @@ public final class Settings {
 
     public static int wikiPreference() {
         // Setting on whether a wikipedia summary should be used if a definition for the word is not found
-        return PREFS.getInt(KEY_WIKI_PREF, WIKI_PREF_AS_BACKUP);
+        return PREFS.getInt(KEY_WIKI_PREF, PREF_WIKI_USE_AS_BACKUP);
+    }
+
+    public static boolean isWikiPrefNever() {
+        return wikiPreference() == PREF_WIKI_NEVER_USE;
+    }
+
+    public static boolean isWikiPrefAsBackup() {
+        return wikiPreference() == PREF_WIKI_USE_AS_BACKUP;
+    }
+
+    public static boolean isWikiPrefAlways() {
+        return wikiPreference() == PREF_WIKI_ALWAYS_USE;
     }
 
     public static boolean prefersMacMenuBar() {
