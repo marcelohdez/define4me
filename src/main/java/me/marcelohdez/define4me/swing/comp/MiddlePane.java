@@ -73,7 +73,7 @@ public class MiddlePane extends JTabbedPane {
         return wordsArray.size();
     }
 
-    public String getWordAt(int i) {
+    public String wordAt(int i) {
         return wordsArray.get(i);
     }
 

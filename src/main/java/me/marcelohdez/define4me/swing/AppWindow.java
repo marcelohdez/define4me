@@ -22,11 +22,9 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.Objects;
 import java.util.Scanner;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicInteger;
 
 public class AppWindow extends JFrame implements KeyListener {
 
@@ -36,8 +34,8 @@ public class AppWindow extends JFrame implements KeyListener {
             "https://en.wikipedia.org/w/api.php?format=json&action=query&prop=extracts&exintro&exsentences=1&explaintext&titles=";
 
     private DefinitionsDialog definitionsDlg; // Dialog to choose definitions from if enabled in preferences
-    private final ConcurrentHashMap<String, String> definitionsMap = new ConcurrentHashMap<>(); // Word definitions
-    private final ArrayList<Integer> wikipediaQueue = new ArrayList<>(); // Stores word indexes to look for on wikipedia
+    private final ConcurrentHashMap<String, String> definitionsArray = new ConcurrentHashMap<>(); // Word definitions
+    private StringBuilder wikipediaQueue = new StringBuilder(); // Stores word indexes to look for on wikipedia
 
     // Menu bar stuffs: File menu
     private final JMenuBar menuBar = new JMenuBar();
@@ -61,14 +59,14 @@ public class AppWindow extends JFrame implements KeyListener {
 
     // Other
     private int keyBeingPressed; // Keep track of key being pressed, for ctrl/cmd + (something) shortcuts
-    private SwingWorker<String, Float> worker; // Worker to do work in background thread(s)
-    private final AtomicInteger finishedWordsAmount = new AtomicInteger(); // Keep count of defined words for progress bar
+    private SwingWorker<String, Float> worker; // Worker to do work in background thread and update progress bar
+    private int finishedWordsAmount = 0; // Keep count of defined words for progress bar
 
     public AppWindow() {
 
         setTitle("Define4Me");
         setDefaultCloseOperation(EXIT_ON_CLOSE);
-        addKeyListener(this);
+        addKeyListener(this); // Listen for shortcuts
 
         setJMenuBar(menuBar);
         add(pasteButton, BorderLayout.WEST);
@@ -126,7 +124,7 @@ public class AppWindow extends JFrame implements KeyListener {
                 @Override
                 protected String doInBackground() {
                     resultText = defineWords(() -> {
-                        float progressFloat = (float) finishedWordsAmount.intValue() / middlePane.getList().size();
+                        float progressFloat = (float) finishedWordsAmount / middlePane.getList().size();
                         setProgress((int) (progressFloat * 100));
                     });
                     return resultText;
@@ -200,73 +198,71 @@ public class AppWindow extends JFrame implements KeyListener {
     }
 
     private String defineWords(Runnable runAfterEachWord) {
-        definitionsMap.clear(); // Reset definitions
-        finishedWordsAmount.set(0); // Reset finished word count
-        wikipediaQueue.clear();
-        if (!Settings.prefersFirstDefinition()) definitionsDlg = new DefinitionsDialog(this);
+        resetValues();
 
-        // Define words
+        // Try to define the words
         for (int i = 0; i < middlePane.wordsAmount(); i++) {
-            defineIndex(i);
+            defineWordAt(i);
             runAfterEachWord.run();
         }
-
-        // Add words not found in dictionary to Wikipedia queue, to do all in one API call
-        if (wikipediaQueue.size() > 0) {
-            StringBuilder queue = new StringBuilder();
-            for (int i = 0; i < wikipediaQueue.size(); i++) {
-                queue.append(middlePane.getList().get(wikipediaQueue.get(i)));
-                // Separate words by | to fetch them all from wikipedia at once
-                if (i + 1 != wikipediaQueue.size()) queue.append("|");
-            }
-            tryGettingWikipediaSummary(queue.toString());
-        }
+        if (wikipediaQueue.length() > 0) tryWikipediaQuery(); // If there is any words in the wiki queue, do stuff
 
         // If enabled and having words with multiple definitions, show chooser dialog:
         if (!Settings.prefersFirstDefinition() && definitionsDlg.wordsToShow() > 0) {
-            definitionsMap.putAll(definitionsDlg.getWantedDefinitions());
+            definitionsArray.putAll(definitionsDlg.getWantedDefinitions());
         }
 
         // Create text to show user: (All words in new lines, with their definition after a dash)
-        StringBuilder sb = new StringBuilder();
+        StringBuilder finalText = new StringBuilder();
         for (String word : middlePane.getList()) { // Append all definitions to separate lines
-            sb.append(word).append(" - ").append(definitionsMap.get(word)).append("\n");
+            finalText.append(word).append(" - ").append(definitionsArray.get(word)).append("\n");
         }
 
-        return sb.toString();
+        return finalText.toString();
     }
 
-    private void defineIndex(int index) {
-        String word = middlePane.getWordAt(index);
+    private void resetValues() {
+        definitionsArray.clear(); // Reset definitions
+        finishedWordsAmount = 0; // Reset finished word count
+        wikipediaQueue = new StringBuilder();
+        if (!Settings.prefersFirstDefinition()) definitionsDlg = new DefinitionsDialog(this);
+    }
 
-        if (!definitionsMap.containsKey(word)) { // If the current word has not been defined yet
-            // Default text + having a key marks this word as defined to other threads
-            definitionsMap.put(word, "No definition found");
-            int pref = Settings.wikiPreference();
-            try {
-                if (pref != Settings.WIKI_PREF_ALWAYS) {
-                    tryToDefineWord(word);
-                } else {
-                    wikipediaQueue.add(index);
-                }
-            } catch (Exception e) {
-                System.out.println("No dictionary definition for " + word);
-                if (pref == Settings.WIKI_PREF_AS_BACKUP) {
-                    wikipediaQueue.add(index);
-                } else if (pref == Settings.WIKI_PREF_NEVER) {
-                    System.out.println("Not checking Wikipedia for " + word + " as the preference is set to never!");
-                }
+    private void defineWordAt(int index) {
+        String word = middlePane.wordAt(index);
+
+        definitionsArray.put(word, "No definition found");
+        int pref = Settings.wikiPreference();
+        try {
+            if (pref == Settings.WIKI_PREF_ALWAYS) {
+                appendToWikiQueue(word);
+            } else {
+                tryDefining(word);
             }
-            finishedWordsAmount.incrementAndGet(); // Add to count of "finished" words for progress bar
+        } catch (Exception e) {
+            System.out.println("No dictionary definition for " + word);
+            if (pref == Settings.WIKI_PREF_AS_BACKUP) {
+                appendToWikiQueue(word);
+            } else if (pref == Settings.WIKI_PREF_NEVER) {
+                System.out.println("Not checking Wikipedia for " + word + " as the preference is set to never!");
+            }
         }
+        finishedWordsAmount ++; // Add to count of "finished" words for progress bar
+    }
+
+    private void appendToWikiQueue(String word) {
+        // If we have added a word before, separate each new one
+        if (wikipediaQueue.length() > 0) wikipediaQueue.append("|");
+
+        wikipediaQueue.append(word);
     }
 
     /** Try to define the given string using meetDeveloper's Dictionary API */
-    private void tryToDefineWord(String word) throws IOException, ParseException {
+    private void tryDefining(String word) throws IOException, ParseException {
         try (var stream = new URL(DICT_QUERY + word).openStream()) {
 
-            JSONArray jsonArray = (JSONArray) parseStream(stream); // Parse response
-            JSONObject jsonObject = (JSONObject) jsonArray.get(0);  // Get first use of word
+            var jsonArray = (JSONArray) parseStream(stream); // Parse response
+            var jsonObject = (JSONObject) jsonArray.get(0);  // Get first use of word
             jsonArray = (JSONArray) jsonObject.get("meanings");     // Get array of "meanings"
 
             // If user prefers to choose between multiple definitions:
@@ -278,18 +274,20 @@ public class AppWindow extends JFrame implements KeyListener {
                 jsonObject = (JSONObject) jsonArray.get(0);             // Get first object of "meanings"
                 jsonArray = (JSONArray) jsonObject.get("definitions");  // Get array of definitions
                 jsonObject = (JSONObject) jsonArray.get(0);         // Get first definition object
-                definitionsMap.put(word, jsonObject.get("definition").toString()); // Add to definitions
+                definitionsArray.put(word, jsonObject.get("definition").toString()); // Add to definitions
             }
         }
     }
 
     /** Try to define the given string with the first sentence of a Wikipedia article with the same title */
-    private void tryGettingWikipediaSummary(String words) {
+    private void tryWikipediaQuery() {
+        String words = wikipediaQueue.toString();
         // Use the wikipedia query: also change all spaces to %20 for link to work
         try (var stream = new URL(WIKI_QUERY + words.replaceAll(" ", "%20"))
                 .openStream()) {
 
-            JSONObject jsonObject = (JSONObject) parseStream(stream); // Parse response
+            System.out.println(words);
+            var jsonObject = (JSONObject) parseStream(stream); // Parse response
             jsonObject = (JSONObject) jsonObject.get("query"); // Get query section
             jsonObject = (JSONObject) jsonObject.get("pages"); // Get pages section
 
@@ -298,7 +296,7 @@ public class AppWindow extends JFrame implements KeyListener {
                 // Map definition to page title
                 String def = pageJSON.get("extract").toString();
                 if (!def.isEmpty()) {
-                    definitionsMap.put(pageJSON.get("title").toString(), def);
+                    definitionsArray.put(pageJSON.get("title").toString(), def);
                 }
             }
 
@@ -323,7 +321,6 @@ public class AppWindow extends JFrame implements KeyListener {
     /** Gets contents from the clipboard as stringFlavor and parse it to put its words in the word list */
     private void paste() {
         if (isWorkerAvailable()) {
-
             try {
                 String pastedText = Toolkit.getDefaultToolkit().getSystemClipboard()
                         .getData(DataFlavor.stringFlavor).toString();
@@ -332,7 +329,6 @@ public class AppWindow extends JFrame implements KeyListener {
                 System.out.println("Unable to paste from clipboard! Stack trace:");
                 ex.printStackTrace();
             }
-
         }
     }
 
