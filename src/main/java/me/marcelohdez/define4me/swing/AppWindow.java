@@ -174,18 +174,18 @@ public class AppWindow extends JFrame implements KeyListener {
     private void getWordsFrom(Scanner reader) {
         try (reader) {
             if (middlePane.wordsAmount() > 0) {
-                String chosen = new ChoiceDialog(this, "Paste",
+                String chosen = new ChoiceDialog(this, "Paste Options",
                     """
                     What would you like to do with
                     your existing words?""",
-                        "Clear", "Add pasted")
+                        "Cancel", "Clear", "Add pasted")
                         .response();
 
                 if (Objects.equals(chosen, "Cancel")) {
                     return; // Do not do anything
                 } else if (Objects.equals(chosen, "Clear")) {
                     middlePane.clear();
-                } // If we chose to add the words then just go ahead:
+                } // If we chose to add the words then just continue:
             }
 
             while (reader.hasNextLine()) {

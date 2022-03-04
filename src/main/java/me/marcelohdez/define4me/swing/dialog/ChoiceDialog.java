@@ -10,13 +10,14 @@ public class ChoiceDialog extends JDialog {
 
     private String response;
 
-    public ChoiceDialog(Component summoner, String title, String desc, String choice, String... otherChoices) {
+    public ChoiceDialog(Component summoner, String title, String desc,
+                        String cancelText, String choice, String... otherChoices) {
         setTitle(title);
         setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
         setResizable(false);
 
         JPanel buttonRow = new JPanel();
-        addButtonTo(buttonRow, "Cancel");
+        addButtonTo(buttonRow, cancelText);
         addButtonTo(buttonRow, choice);
         for (String s : otherChoices) addButtonTo(buttonRow, s);
 
