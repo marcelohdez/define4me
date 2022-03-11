@@ -18,10 +18,17 @@ configurations {
 }
 
 dependencies {
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.2'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.2'
+
     // For reading JSON files returned by https://dictionaryapi.dev, dependency is from:
     // https://mvnrepository.com/artifact/com.googlecode.json-simple/json-simple
     implementation 'com.googlecode.json-simple:json-simple:1.1.1'
     extraLibs group: 'com.googlecode.json-simple', name: 'json-simple', version: '1.1.1'
+}
+
+test {
+    useJUnitPlatform()
 }
 
 application {
