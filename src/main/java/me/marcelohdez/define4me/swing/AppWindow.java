@@ -285,7 +285,6 @@ public class AppWindow extends JFrame implements KeyListener {
         try (var stream = new URL(WIKI_QUERY + words.replaceAll(" ", "%20"))
                 .openStream()) {
 
-            System.out.println(words);
             var jsonObject = (JSONObject) parseStream(stream); // Parse response
             jsonObject = (JSONObject) jsonObject.get("query"); // Get query section
             jsonObject = (JSONObject) jsonObject.get("pages"); // Get pages section
