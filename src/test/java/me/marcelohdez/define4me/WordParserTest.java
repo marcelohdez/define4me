@@ -22,12 +22,12 @@ public class WordParserTest {
     }
 
     @Test
-    public void removeEverythingBeforeFirstLetter() {
-        assertEquals("Hello", WordParser.parseString("?//-  hello"));
+    public void trimBeforeAndAfterWord() {
+        assertEquals("Hello", WordParser.parseString("?//-  hello--!"));
     }
 
     @Test
-    public void removeEverythingAfterLastLetter() {
-        assertEquals("Hello", WordParser.parseString("hello--!"));
+    public void returnBlankIfNoLetters() {
+        assertEquals("", WordParser.parseString("!-'12345 "));
     }
 }
