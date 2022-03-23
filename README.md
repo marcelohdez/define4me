@@ -35,12 +35,12 @@ _This is not officially supported, as there may be unwanted side effects from cu
 Download the source code and extract the folder inside, then open the
 extracted folder with your Terminal/Command Prompt and running gradle's build command.
 
-* **On Windows** cd into the folder and run ```gradlew build``` in Command Prompt or Terminal.
-* **On macOS** or other **Linux OS's** cd into the folder and (you may need to run ```chmod +x gradlew```
-before this works) run ```./gradlew build``` in the terminal.
+* **On Windows** cd into the folder and run `gradlew build` in Command Prompt or Terminal.
+* **On macOS** or other **Linux OS's** cd into the folder and (you may need to run `chmod +x gradlew`
+before this works) run `./gradlew build` in the terminal.
 
-Once finished, the resulting files will be in the ```build``` folder. The .jar will be in ```build > libs``` and
-gradle's default run scripts will be in ```build > bin```.
+Once finished, the resulting files will be in the `build` folder. The .jar will be in `build > libs` and
+gradle's default run scripts will be in `build > bin`.
 
 ## License
 Define4Me is licensed under the GNU General Public License v3.0, more information can
