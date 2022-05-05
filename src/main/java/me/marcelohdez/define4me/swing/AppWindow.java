@@ -22,9 +22,9 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
 import java.util.Objects;
 import java.util.Scanner;
-import java.util.concurrent.ConcurrentHashMap;
 
 public class AppWindow extends JFrame implements KeyListener {
 
@@ -34,7 +34,7 @@ public class AppWindow extends JFrame implements KeyListener {
             "https://en.wikipedia.org/w/api.php?format=json&action=query&prop=extracts&exintro&exsentences=1&explaintext&titles=";
 
     private DefinitionsDialog definitionsDlg; // Dialog to choose definitions from if enabled in preferences
-    private final ConcurrentHashMap<String, String> definitionsArray = new ConcurrentHashMap<>(); // Word definitions
+    private final HashMap<String, String> definitionsMap = new HashMap<>(); // Word and their definitions
     private StringBuilder wikipediaQueue = new StringBuilder(); // Stores word indexes to look for on wikipedia
 
     // Menu bar stuffs: File menu
@@ -209,20 +209,20 @@ public class AppWindow extends JFrame implements KeyListener {
 
         // If enabled and having words with multiple definitions, show chooser dialog:
         if (!Settings.prefersFirstDefinition() && definitionsDlg.wordsToShow() > 0) {
-            definitionsArray.putAll(definitionsDlg.getWantedDefinitions());
+            definitionsMap.putAll(definitionsDlg.getWantedDefinitions());
         }
 
         // Create text to show user: (All words in new lines, with their definition after a dash)
         StringBuilder finalText = new StringBuilder();
         for (String word : middlePane.getList()) { // Append all definitions to separate lines
-            finalText.append(word).append(" - ").append(definitionsArray.get(word)).append("\n");
+            finalText.append(word).append(" - ").append(definitionsMap.get(word)).append("\n");
         }
 
         return finalText.toString();
     }
 
     private void resetValues() {
-        definitionsArray.clear(); // Reset definitions
+        definitionsMap.clear(); // Reset definitions
         finishedWordsAmount = 0; // Reset finished word count
         wikipediaQueue = new StringBuilder();
         if (!Settings.prefersFirstDefinition()) definitionsDlg = new DefinitionsDialog(this);
@@ -231,7 +231,7 @@ public class AppWindow extends JFrame implements KeyListener {
     private void defineWordAt(int index) {
         String word = middlePane.wordAt(index);
 
-        definitionsArray.put(word, "No definition found");
+        definitionsMap.put(word, "No definition found");
         try {
             if (Settings.isWikiPrefAlways()) {
                 appendToWikiQueue(word);
@@ -273,7 +273,7 @@ public class AppWindow extends JFrame implements KeyListener {
                 jsonObject = (JSONObject) jsonArray.get(0);             // Get first object of "meanings"
                 jsonArray = (JSONArray) jsonObject.get("definitions");  // Get array of definitions
                 jsonObject = (JSONObject) jsonArray.get(0);         // Get first definition object
-                definitionsArray.put(word, jsonObject.get("definition").toString()); // Add to definitions
+                definitionsMap.put(word, jsonObject.get("definition").toString()); // Add to definitions
             }
         }
     }
@@ -294,7 +294,7 @@ public class AppWindow extends JFrame implements KeyListener {
                 // Map definition to page title
                 String def = pageJSON.get("extract").toString();
                 if (!def.isEmpty()) {
-                    definitionsArray.put(pageJSON.get("title").toString(), def);
+                    definitionsMap.put(pageJSON.get("title").toString(), def);
                 }
             }
 

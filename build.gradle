@@ -14,7 +14,7 @@ repositories {
 
 configurations {
     // Used to include dependencies in jar. From Nikecrow: https://discuss.gradle.org/t/how-to-include-dependencies-in-jar/19571
-    extraLibs
+    includeLibs
 }
 
 dependencies {
@@ -24,7 +24,7 @@ dependencies {
     // For reading JSON files returned by https://dictionaryapi.dev, dependency is from:
     // https://mvnrepository.com/artifact/com.googlecode.json-simple/json-simple
     implementation 'com.googlecode.json-simple:json-simple:1.1.1'
-    extraLibs group: 'com.googlecode.json-simple', name: 'json-simple', version: '1.1.1'
+    includeLibs group: 'com.googlecode.json-simple', name: 'json-simple', version: '1.1.1'
 }
 
 test {
